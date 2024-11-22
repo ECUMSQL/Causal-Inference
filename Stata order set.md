@@ -10,9 +10,21 @@ body {
 }
 </style> -->
 
-# <div align="center"  style="font-size:23px;">The empirical method of economic research and stata code</div>
+<div align="center"  style="font-size:23px;">The empirical method of economic research and stata code</div>
 
 在做任何分析之前都要做协变量平衡分析，防止由于对照组和控制组变量分布造成的误差。
+- [1.Random Experiment](#1random-experiment)
+- [Instrument Variable](#instrument-variable)
+  - [弱工具变量检验](#弱工具变量检验)
+  - [外生性（排除性）检验](#外生性排除性检验)
+  - [过度识别检验](#过度识别检验)
+
+## <div style="font-size:25px;">1.Random Experiment</div>
+
+在进行因果估计之前为了避免存在样本分布问题，或者选择性问题，通常会对对照组和样本组进行
+
+
+
 
 ## <div style="font-size:25px;">Instrument Variable</div>
 
