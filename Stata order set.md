@@ -1,3 +1,17 @@
+<!-- <style>
+@page {
+    size: A4;
+    margin: 20mm;
+}
+body {
+    font-family: Arial, sans-serif;
+    font-size: 10pt;
+    line-height: 1.5;
+}
+</style> -->
+
+# <div align="center"  style="font-size:23px;">The empirical method of economic research and stata code</div>
+
 在做任何分析之前都要做协变量平衡分析，防止由于对照组和控制组变量分布造成的误差。
 
 ## <div style="font-size:25px;">Instrument Variable</div>
@@ -62,4 +76,12 @@
 
     ```stata
     ivregress 2sls y (x1 = z1 z2)
+    ```
+
+2. **Anderson - Rubin 检验**  用于非线性模型或联立方程模型中的工具变量过度识别检验
+    以联立方程模型为例
+
+    ```stata
+    sysreg (eq1: y1 = x1 x2 (y2 = z1 z2)) (eq2: y2 = x3 x4 (y1 = z3 z4))
+    test [eq1_y2] [eq2_y1]  // 原假设是不存在过度识别问题
     ```
