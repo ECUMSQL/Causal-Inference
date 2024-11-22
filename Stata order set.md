@@ -1,16 +1,3 @@
-<!-- <style>
-@page {
-    size: A4;
-    margin: 20mm;
-}
-body {
-    font-family: Arial, sans-serif;
-    font-size: 10pt;
-    line-height: 1.5;
-}
-</style> -->
-
-# <div align="center"  style="font-size:23px;">The empirical method of economic research and stata code</div>
 在做任何分析之前都要做协变量平衡分析，防止由于对照组和控制组变量分布造成的误差。
 
 ## <div style="font-size:25px;">Instrument Variable</div>
@@ -46,7 +33,7 @@ body {
 
 ### <div style="font-size:20px;">外生性（排除性）检验</div>
 
-1. **Hansen检验**  
+1. **Hausman检验**  
 
     ```stata
     //豪斯曼检验 这是在同方差条件下的检验
@@ -57,9 +44,17 @@ body {
     hausman iv ols, constant sigmamore
     //chi - squared和p - value。p 小于0.05，拒原，认为变量是内生变量,p最好大一点
     ```
+
 2. **DWH检验**  
 
     用上一个检验的结果就行，也会输出DWH检验的结果。这是在异方差条件下的检验
+
+3. **GMM估计**
+    
+    ```stata
+    ivregress gmm y (x1 = z1 z2), twostep robust     
+    estat overid   //原假设：工具变量是有外生的
+    ```
 
 ### <div style="font-size:20px;">过度识别检验</div>
 
@@ -67,12 +62,4 @@ body {
 
     ```stata
     ivregress 2sls y (x1 = z1 z2)
-    estat overid  // Sargan - Hansen J - 统计量 原假设是不存在过度识别问题（注意过度识别的含义）
-    ```
-
-2. **Anderson - Rubin 检验**  用于非线性模型或联立方程模型中的工具变量过度识别检验
-    以联立方程模型为例
-    ```stata
-    sysreg (eq1: y1 = x1 x2 (y2 = z1 z2)) (eq2: y2 = x3 x4 (y1 = z3 z4))
-    test [eq1_y2] [eq2_y1]  // 原假设是不存在过度识别问题
     ```
