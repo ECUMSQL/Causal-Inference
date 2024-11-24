@@ -157,6 +157,8 @@ logit y x1 x2 x3 //默认使用最大似然估计
         ```stata
         logit treat x1 x2 x3 //使用treat作为因变量，其他协变量进行估计得分，这估计的是协变量相同时被处理的概率
         predict pscore, pr
+        psmatch 
+        ```
 
 
 
