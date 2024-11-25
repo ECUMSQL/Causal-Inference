@@ -32,9 +32,14 @@ body {
   - [2. **模糊匹配**](#2-模糊匹配)
   - [3. **倾向得分匹配PSM** ](#3-倾向得分匹配psm-)
 - [5.Instrument Variable](#5instrument-variable)
-  - [弱工具变量检验](#弱工具变量检验)
-  - [外生性（排除性）检验](#外生性排除性检验)
-  - [过度识别检验](#过度识别检验)
+  - [1.弱工具变量检验](#1弱工具变量检验)
+  - [2.外生性（排除性）检验](#2外生性排除性检验)
+  - [3.过度识别检验](#3过度识别检验)
+- [6.Panel Data](#6panel-data)
+- [7.DID](#7did)
+  - [**1.平行趋势假定**](#1平行趋势假定)
+  - [**2.不满足平行趋势假定的解决方法**](#2不满足平行趋势假定的解决方法)
+  - [**3.DID的扩展**](#3did的扩展)
 - [实用小代码stata](#实用小代码stata)
 - [一些方法](#一些方法)
 
@@ -244,7 +249,7 @@ reclink varlist using filename , idmaster(varname) idusing(varname) gen(newvarna
 ivregress 2sls y (x1 = z1 z2) x2 x3, robust
 ```
 
-### <div style="font-size:20px;">弱工具变量检验</div>
+### <div style="font-size:20px;">1.弱工具变量检验</div>
 
 1. **F检验**
 
@@ -271,7 +276,7 @@ ivregress 2sls y (x1 = z1 z2) x2 x3, robust
     ivreg2 y (x1 x2 = z1 z2), robust   //Kleibergen-Paap检验,要大于 10
     ```
 
-### <div style="font-size:20px;">外生性（排除性）检验</div>
+### <div style="font-size:20px;">2.外生性（排除性）检验</div>
 
 1. **Hausman检验**  
 
@@ -296,7 +301,7 @@ ivregress 2sls y (x1 = z1 z2) x2 x3, robust
     estat overid   //原假设：工具变量是有外生的
     ```
 
-### <div style="font-size:20px;">过度识别检验</div>
+### <div style="font-size:20px;">3.过度识别检验</div>
 
 1. **Sargan检验**  用于线性模型中的工具变量过度识别检验
 
@@ -314,6 +319,76 @@ ivregress 2sls y (x1 = z1 z2) x2 x3, robust
 
 3. **Hansen J统计量** 非iid时用Hansen J统计量
    和Sargon检验类似 非iid时用Hassen统计量
+
+## <div style="font-size:25px;">6.Panel Data</div>
+
+## <div style="font-size:25px;">7.DID</div>
+
+### **1.平行趋势假定**
+
+*用多期数据进行之前期数的假定，作图来看是否满足*
+
+### **2.不满足平行趋势假定的解决方法**
+
+1. 增加组-时间固定效应
+
+```stata
+//teset告诉我们面板数据的实际结构
+xtset id year // 设置以id为个体维度，year为时间维度的面板结构
+gen did = treated * (year >= 政策实施时间点)  // 政策是在2010年实施，那就是(year >= 2010)(多期可以用前期的数据的做平行趋势检验)
+xtreg y treated (year >= 政策实施时间点) did i.group_id#i.year, fe  // DID 可加聚类稳健的标准误 vce(cluster group_id)
+```
+
+2. 三重差分
+三重差分和实际的二重差分也是使用xtreg命令，但是根据函数形式，其需要构建更多的二重交互项和一个三重交互项
+```stata
+xtset id year // 设置以id为个体维度，year为时间维度的面板结构
+gen 多个did
+xtreg y 多个did 控制变量  聚类稳健的标准误//同时也可以加入分组-时间的固定效应
+```
+3. 使用安慰剂检验
+
+```stata
+//这里留给did代
+```
+
+### **3.DID的扩展**
+根据不同的情况，我们可以使用不同DID的变种
+
+1. 标准DID(多期)
+```stata
+//生成交互项
+gen did = treated * time
+xtset id year//设定时间和个体
+//进行双向固定效应的DID估计（个体和时间固定效应）
+xtreg y treated time did, fe
+```
+
+2. 多期DID--由于个体变量受处理时间不同导致的，其在公式中处理加入时间i
+```stata
+//这里留给did代
+```
+
+3. 广义DID--若冲击在全部数据中存在，无控制组，前提是个体受冲击的影响不同
+```stata
+//这里留给did代
+```
+
+4. 异质DID--对于每个组别的处理是异质的，加入异质组别的交互项
+```stata
+//这里留给did代
+```
+
+5. 队列DID--利用队列代替时间，利用截面数据代替序列数据
+```stata
+//这里留给did代
+```
+
+
+
+
+
+
 
 ## <div style="font-size:25px;">实用小代码stata</div>
 
