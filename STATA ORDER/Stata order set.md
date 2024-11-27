@@ -21,6 +21,7 @@ body {
   - [3. **广义最小二乘** ](#3-广义最小二乘-)
   - [4. **迭代加权最小二乘方法（不要求）** ](#4-迭代加权最小二乘方法不要求-)
   - [5. **岭回归** ](#5-岭回归-)
+  - [5. **Lasso回归** ](#5-lasso回归-)
 - [3.Limit dependent varible](#3limit-dependent-varible)
   - [1. **Logit模型** ](#1-logit模型-)
   - [2. **Probit模型**  ](#2-probit模型--)
@@ -35,9 +36,9 @@ body {
   - [2. **模糊匹配**](#2-模糊匹配)
   - [3. **倾向得分匹配PSM** ](#3-倾向得分匹配psm-)
 - [5.Instrument Variable](#5instrument-variable)
-  - [1.弱工具变量检验](#1弱工具变量检验)
-  - [2.外生性（排除性）检验](#2外生性排除性检验)
-  - [3.过度识别检验](#3过度识别检验)
+  - [**1.弱工具变量检验**](#1弱工具变量检验)
+  - [**2.外生性（排除性）检验**](#2外生性排除性检验)
+  - [**3.过度识别检验**](#3过度识别检验)
 - [6.Panel Data](#6panel-data)
 - [7.DID](#7did)
   - [**1.平行趋势假定**](#1平行趋势假定)
@@ -46,7 +47,9 @@ body {
 - [实用小代码stata](#实用小代码stata)
 - [一些方法](#一些方法)
 
-## <div style="font-size:25px;">1.Random Experiment</div>
+<div style="page-break-after: always;"></div>
+
+## <div style="font-size:25px;text-align:center;">1.Random Experiment</div>
 
 1. 在进行因果估计之前为了避免存在样本分布问题，或者选择性问题，通常会对对照组和样本组进行随机化分析，即计算对照组和实验组具有近似的样本分布。这样可以表示条件独立性。
 
@@ -62,36 +65,47 @@ body {
     // 分组求回归等公式
     bys subgroup: logit/reg y x
     ```
+
 2. 异方差和同方差的检查
-   
+
    ```stata
    reg price rm crim //首先普通回归，看其残差图的分布推知误差，因为残差基本包含误差。
    rvfplot  //绘制残差图
    ```
+
 3. 多重共线性检验
+
    ```stata
     reg y x controls //将面板数据当成截面数据做回归
     estat vif //方差膨胀因子 ，VIF最大不超过10，严格来说不应高于5
    ```
 
-## <div style="font-size:25px;">2.OLS</div>
+<div style="page-break-after: always;"></div>
+
+## <div style="font-size:25px;text-align:center;">2.OLS</div>
+
 ***误差项和残差项的是不同的，误差项就在那里，但是分布不知道，但是残差项则是根据你估计的好坏变化。***
 >异方差指的是误差，由于误差项不确定，所以假设对于每一个i都有一个分布，由$\beta$的推导知异方差的影响，从回归分布图也可以看出来，同方差的分布相对于回归线是均匀的，但是异方差不均匀。（误差由于截距的存在，均值为0）
 
 ### <div style="font-size:20px;">1. **OLS回归** </div>
+
 在进行ols回归时，为了保证ols估计无偏，满足条件，需要保证其是线性的。***利用作图***
+
 ```stata
 reg y x1 x2 x3//robust 异方差情况
 ```
 
 ### <div style="font-size:20px;">2. **加权回归** </div>
+
 由于不同方差的存在，直观上来说，对不同方差的数据进行相同加权是不合理的，***大方差加小权***。其中一个方法：用方差的倒数进行最小残差加权。
 $$
 \hat\mu= \arg \mathop{\min}\limits_{\mu} \sum_1^n \frac{(y-\mu)^2}{\sigma^2}
 $$
+
 ```stata
 reg y x1 x2 x3 [aweight = weight] //加权回归
 ```
+
 此时ols是无偏的，但不是BLUE的。加权ols很好解决这一点。
 ***由于需要确切的知道误差的方差，这在现实中是不可能的，所以一般使用自己的加权，或者使用robust***
 
@@ -123,6 +137,7 @@ Q(\theta,\beta)=(y-x\beta)^T\Sigma^{-1}(\theta)(y-x\beta)+log|\Sigma(\theta)|
 $$
 
 ### <div style="font-size:20px;">5. **岭回归** </div>
+
 [岭回归细节](https://www.bbbdata.com/text/29)
 在普通的ols回归中，我们需要满足非共线性或秩条件，当存在共线性时会导致估计出现巨大偏误，参数无法估计，多重共线性检验可以用**vif**。而岭回归则可以避免这个问题，通过岭回归作为一种正则化方法。
 **思想：** 核心思想是在OLS的基础上引入一个正则化项，通过对回归系数进行调整来 ***解决多重共线性问题*** 。正则化项是一个惩罚项，它能够约束回归系数的大小，降低模型的复杂度，防止过拟合
@@ -132,9 +147,96 @@ L(w)=\sum_{i=1}^{N}(y-xw)^2+\alpha \sum_{i=1}^{n}(w_i)^2
 $$
 其中$\alpha$为惩罚系数 ，n为系数数量
 求解得$W=(X^TX+\alpha I)^{-1}X^TY$ 此时 对于x的秩条件放松，秩条件必然满足，$\alpha$控制的系数的大小
-***怎么控制$\alpha$:***
+***怎么控制$\alpha$:*** ***岭迹图***，找到合适的$\alpha$，即不停的变动$\alpha$，然后看其残差的变化。
+<div align="center">
+    <img src="岭迹图.png" width="50%">
+</div>
 
-## <div style="font-size:25px;">3.Limit dependent varible</div>
+***确定思想：***（存在优先级）
+
+- w,不要过大，过大会导致不稳定
+- $\alpha尽量小$：在保障w不太大的情况下，尽量取更小的$\alpha$，防止过强的惩罚
+
+<div align="center">
+    <img src="岭回归情况2.png" width="50%">
+</div>
+<div  style="text-align:center;">不选</div>
+<div align="center">
+    <img src="岭回归情况1.png" width="50%">
+</div>
+<div  style="text-align:center;">w一般需要比较稳定</div>
+
+```stata
+//岭回归
+ridgereg y x1 x2 x3..., l(lamda_value)  //lamda_value表示惩罚系数
+// 定义一个岭参数的取值范围，这里从0.1到1，间隔为0.1
+forvalues lambda = 0.1(0.1)1 {
+    ridgereg y x, l(`lambda')
+    est store ridge_`lambda'  // 将每次的估计结果存储起来，方便后续比较等操作
+}
+```
+
+```stata
+//岭迹图
+// 选择因变量和自变量，这里以mpg为因变量，weight、length等为自变量举例
+local yvar mpg
+local xvars weight length foreign
+//得到自变量的数量
+local k : word count `x'
+// 创建一个矩阵来存储系数估计值，行数为lambda值的数量，列数为自变量数量 + 1（包括lamda）
+matrix coef_matrix = J(`=word count `lambda_values`',`=`k'+1',.)
+// 循环进行岭回归并存储系数
+local i = 1
+foreach lambda of local lambda_values {
+    ridgereg `yvar' `xvars', l(`lambda')
+    matrix coef_matrix[`i',1] = `lambda' // 存储lambda值在第一列
+    forvalues j = 1/`k' {
+        matrix coef_matrix[`i',`j'+1] = _b[`xvars'[`j']]
+    }
+    local i = `i'+1
+}
+```
+
+### <div style="font-size:20px;">5. **Lasso回归** </div>
+
+*lasso回归也是为了治疗共线性，但是不像岭回归那样，其稀疏性会帮助去除一些变量，而不是保证秩条件，更加残暴* Lasso只起到变量筛选的问题
+Lasso回归是在岭回归的基础上将惩罚函数改为了绝对值的函数，其损失函数为：
+$$
+L(w)=\sum_{i=1}^{N}(y-xw)^2+\alpha \sum_{i=1}^{n}|w_i|
+$$
+其他基本不变。Lasso方法一般采用坐标下降法进行求解初始化后不停迭代w，最后达到驻点。
+
+<div align="center">
+    <img src="迭代过程.png" width="50%">
+</div>
+
+***lasso reg***：
+$$
+  \mathop{\min}\limits_{w,b} \sum_{i=1}^{N}(y-xw)^2 \\
+  s.t. \Vert w \Vert_1 \leq t
+$$
+***ridge reg：***
+$$
+  \mathop{\min}\limits_{w,b} \sum_{i=1}^{N}(y-xw)^2 \\
+  s.t. \Vert w \Vert_2^2 \leq t
+$$
+可将t看作惩罚系数的程度，t越小，惩罚力度越大
+<div align="center">
+    <img src="稀疏性.png" width="50%">
+</div>
+
+易知，lasso的约束是正方形，而岭回归的约束则是圆形，因此lasso更容易产生稀疏性。KKT条件更容易到坐标轴上，因此更容易产生 ***稀疏性(去除不适合的变量)***。
+
+```stata
+lasso logit xy , selection(cv, alllambdas) stop(0) //lasso回归 可以根据数据选择logit还是liner，其中cv是交叉验证，alllambdas是所有的lamda值
+Lassoknots //选择选值过程
+Lassoknots //绘制交叉验证图，给出不同lamda下的交叉验证结果
+coefpath,legend(on position(12) cols(4)) //coefpath函数来绘制lasso的系数路径（coefficient paths）
+```
+
+<div style="page-break-after: always;"></div>
+
+## <div style="font-size:25px;text-align:center;">3.Limit dependent varible</div>
 
 ***为什么受限被解释变量不能使用OLS：OLS会产生异方差问题，同时会导致预测值大于1或者小于0，这没有意义。***
 当相关变量是虚拟变量或选择变量时，我们必须使用其他模型，例如 logit 或probit模型来估计模型
@@ -240,7 +342,9 @@ tobit y x1 x2 x3 //截尾回归 ll() 选项表示发生左截断的值，ul() �
 
 - Hit rate
 
-## <div style="font-size:25px;">4.Matching</div>
+<div style="page-break-after: always;"></div>
+
+## <div style="font-size:25px;text-align:center;">4.Matching</div>
 
 ###  <div style="font-size:20px;">1. **精确匹配** </div>
 
@@ -296,7 +400,9 @@ reclink varlist using filename , idmaster(varname) idusing(varname) gen(newvarna
     psmatch2 treat x1 x2, outcome(y) kernel kerneltype(normal/biweight/epan/uniform/tricube) //进行核匹配
     ```
 
-## <div style="font-size:25px;">5.Instrument Variable</div>
+<div style="page-break-after: always;"></div>
+
+## <div style="font-size:25px;text-align:center;">5.Instrument Variable</div>
 
 我们在使用工具变量时，需要进行检验，最常见的就是排除性和相关性。  
 进行IV时我们需要讲故事，并且数据检验其合理性：同时其最基础的工具变量回归的代码如下
@@ -305,7 +411,7 @@ reclink varlist using filename , idmaster(varname) idusing(varname) gen(newvarna
 ivregress 2sls y (x1 = z1 z2) x2 x3, robust
 ```
 
-### <div style="font-size:20px;">1.弱工具变量检验</div>
+### <div style="font-size:20px;">**1.弱工具变量检验**</div>
 
 1. **F检验**
 
@@ -332,7 +438,7 @@ ivregress 2sls y (x1 = z1 z2) x2 x3, robust
     ivreg2 y (x1 x2 = z1 z2), robust   //Kleibergen-Paap检验,要大于 10
     ```
 
-### <div style="font-size:20px;">2.外生性（排除性）检验</div>
+### <div style="font-size:20px;">**2.外生性（排除性）检验**</div>
 
 1. **Hausman检验**  
 
@@ -357,7 +463,7 @@ ivregress 2sls y (x1 = z1 z2) x2 x3, robust
     estat overid   //原假设：工具变量是有外生的
     ```
 
-### <div style="font-size:20px;">3.过度识别检验</div>
+### <div style="font-size:20px;">**3.过度识别检验**</div>
 
 1. **Sargan检验**  用于线性模型中的工具变量过度识别检验
 
@@ -376,15 +482,19 @@ ivregress 2sls y (x1 = z1 z2) x2 x3, robust
 3. **Hansen J统计量** 非iid时用Hansen J统计量
    和Sargon检验类似 非iid时用Hassen统计量
 
-## <div style="font-size:25px;">6.Panel Data</div>
+<div style="page-break-after: always;"></div>
 
-## <div style="font-size:25px;">7.DID</div>
+## <div style="font-size:25px;text-align:center;">6.Panel Data</div>
 
-### **1.平行趋势假定**
+<div style="page-break-after: always;"></div>
+
+## <div style="font-size:25px;text-align:center;">7.DID</div>
+
+###  <div style="font-size:20px;">**1.平行趋势假定**</div>
 
 *用多期数据进行之前期数的假定，作图来看是否满足*
 
-### **2.不满足平行趋势假定的解决方法**
+###  <div style="font-size:20px;">**2.不满足平行趋势假定的解决方法**</div>
 
 1. 增加组-时间固定效应
 
@@ -408,7 +518,7 @@ xtreg y 多个did 控制变量  聚类稳健的标准误//同时也可以加入�
 //这里留给did代
 ```
 
-### **3.DID的扩展**
+### <div style="font-size:20px;">**3.DID的扩展**</div>
 根据不同的情况，我们可以使用不同DID的变种
 
 1. 标准DID(多期)
@@ -444,9 +554,9 @@ xtreg y treated time did, fe
 
 
 
+<div style="page-break-after: always;"></div>
 
-
-## <div style="font-size:25px;">实用小代码stata</div>
+## <div style="font-size:25px;text-align:center;">实用小代码stata</div>
 
 - ```stata
     count if contact == 1 //统计contact为1的个数
@@ -456,6 +566,6 @@ xtreg y treated time did, fe
     drop if var==. //删除变量的缺失值
     ```
 
-## <div style="font-size:25px;">一些方法</div>
+## <div style="font-size:25px;text-align:center;">一些方法</div>
 
 - 证伪实验 ：证伪实验的目的不是证明某个假设是正确的，而是尝试找到证据来反驳它，证伪实验中，研究者会设计一个实验来检验假设的预测结果。如果实验结果与假设的预测不一致，那么就可以认为该假设被证伪了。例如：如果认为打电话对于02年的选举有影响，那证伪实验就是在98年进行打电话对于选举的影响，如果没有影响，那么就认为打电话对选举有影响（之前得出结论有影响）。
