@@ -18,6 +18,9 @@ body {
 - [2.OLS](#2ols)
   - [1. **OLS回归** ](#1-ols回归-)
   - [2. **加权回归** ](#2-加权回归-)
+  - [3. **广义最小二乘** ](#3-广义最小二乘-)
+  - [4. **迭代加权最小二乘方法（不要求）** ](#4-迭代加权最小二乘方法不要求-)
+  - [5. **岭回归** ](#5-岭回归-)
 - [3.Limit dependent varible](#3limit-dependent-varible)
   - [1. **Logit模型** ](#1-logit模型-)
   - [2. **Probit模型**  ](#2-probit模型--)
@@ -59,24 +62,77 @@ body {
     // 分组求回归等公式
     bys subgroup: logit/reg y x
     ```
+2. 异方差和同方差的检查
+   
+   ```stata
+   reg price rm crim //首先普通回归，看其残差图的分布推知误差，因为残差基本包含误差。
+   rvfplot  //绘制残差图
+   ```
+3. 多重共线性检验
+   ```stata
+    reg y x controls //将面板数据当成截面数据做回归
+    estat vif //方差膨胀因子 ，VIF最大不超过10，严格来说不应高于5
+   ```
 
 ## <div style="font-size:25px;">2.OLS</div>
-
+***误差项和残差项的是不同的，误差项就在那里，但是分布不知道，但是残差项则是根据你估计的好坏变化。***
 >异方差指的是误差，由于误差项不确定，所以假设对于每一个i都有一个分布，由$\beta$的推导知异方差的影响，从回归分布图也可以看出来，同方差的分布相对于回归线是均匀的，但是异方差不均匀。（误差由于截距的存在，均值为0）
 
 ### <div style="font-size:20px;">1. **OLS回归** </div>
-
+在进行ols回归时，为了保证ols估计无偏，满足条件，需要保证其是线性的。***利用作图***
 ```stata
 reg y x1 x2 x3//robust 异方差情况
 ```
 
 ### <div style="font-size:20px;">2. **加权回归** </div>
-加权回归可以解决异方差问题。
-利用加权对于其残差平方和进行加权，进行最小化.其权重可以选择倾向得分.
-
+由于不同方差的存在，直观上来说，对不同方差的数据进行相同加权是不合理的，***大方差加小权***。其中一个方法：用方差的倒数进行最小残差加权。
+$$
+\hat\mu= \arg \mathop{\min}\limits_{\mu} \sum_1^n \frac{(y-\mu)^2}{\sigma^2}
+$$
 ```stata
 reg y x1 x2 x3 [aweight = weight] //加权回归
 ```
+此时ols是无偏的，但不是BLUE的。加权ols很好解决这一点。
+***由于需要确切的知道误差的方差，这在现实中是不可能的，所以一般使用自己的加权，或者使用robust***
+
+### <div style="font-size:20px;">3. **广义最小二乘** </div>
+***当误差的方差已知（需要预测方差的形式）***，那么根据思想:
+模型$y=x\beta+\epsilon$ 两边乘$\Sigma^{\frac{-1}{2}}$ 
+以下是将该式子翻译为LaTeX代码的结果：
+$$
+y^* \triangleq \Sigma^{-1/2}y = \Sigma^{-1/2}X\beta + \Sigma^{-1/2}\varepsilon \triangleq X^*\beta + \varepsilon^*, \quad \varepsilon^* \sim (0, I_{n})
+$$
+已知该模型满足GM假设，则误差项的误差平方和为 
+$$\Vert y^*-x^*\beta \Vert = (y-x\beta)^T\Sigma^{-1}(y-x\beta)$$ 
+则其最优BLUE的估计$\hat{\beta}_{GLS}=(x^{*T}x^*)^{-1}x^{*T}y=(x^T\Sigma^{-1}x)^{-1}x^T\Sigma^{-1}y$
+这就是广义最小二乘估计。
+
+```stata
+reg price rm crim
+gen lny_resid = log(resid^2) //产生残差平方和对数的变量（为了线性回归回归）
+reg lny_resid rm crim //进行残差回归，估计残差的具体形式
+predict lnh, xb  //线性预测残差
+gen var_pred = exp(lnh)  //预测的恢复 这里预测方差的形式
+gls price rm crim, weights(var_pred)//GLS回归，使用var_pred为权重
+```
+
+### <div style="font-size:20px;">4. **迭代加权最小二乘方法（不要求）** </div>
+若方差是较为复杂项，其中的方差也有参数需要求解，那么方法就是迭代加权。即固定$\theta$然后运用GLS，然后固定$\beta$，残差求解$\theta$
+$$
+Q(\theta,\beta)=(y-x\beta)^T\Sigma^{-1}(\theta)(y-x\beta)+log|\Sigma(\theta)|
+$$
+
+### <div style="font-size:20px;">5. **岭回归** </div>
+[岭回归细节](https://www.bbbdata.com/text/29)
+在普通的ols回归中，我们需要满足非共线性或秩条件，当存在共线性时会导致估计出现巨大偏误，参数无法估计，多重共线性检验可以用**vif**。而岭回归则可以避免这个问题，通过岭回归作为一种正则化方法。
+**思想：** 核心思想是在OLS的基础上引入一个正则化项，通过对回归系数进行调整来 ***解决多重共线性问题*** 。正则化项是一个惩罚项，它能够约束回归系数的大小，降低模型的复杂度，防止过拟合
+其损失函数为：
+$$
+L(w)=\sum_{i=1}^{N}(y-xw)^2+\alpha \sum_{i=1}^{n}(w_i)^2  
+$$
+其中$\alpha$为惩罚系数 ，n为系数数量
+求解得$W=(X^TX+\alpha I)^{-1}X^TY$ 此时 对于x的秩条件放松，秩条件必然满足，$\alpha$控制的系数的大小
+***怎么控制$\alpha$:***
 
 ## <div style="font-size:25px;">3.Limit dependent varible</div>
 
