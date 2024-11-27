@@ -505,14 +505,14 @@ gen did = treated * (year >= 政策实施时间点)  // 政策是在2010年实�
 xtreg y treated (year >= 政策实施时间点) did i.group_id#i.year, fe  // DID 可加聚类稳健的标准误 vce(cluster group_id)
 ```
 
-2. 三重差分
+1. 三重差分
 三重差分和实际的二重差分也是使用xtreg命令，但是根据函数形式，其需要构建更多的二重交互项和一个三重交互项
 ```stata
 xtset id year // 设置以id为个体维度，year为时间维度的面板结构
 gen 多个did
 xtreg y 多个did 控制变量  聚类稳健的标准误//同时也可以加入分组-时间的固定效应
 ```
-3. 使用安慰剂检验
+1. 使用安慰剂检验(证伪检验，是否满足平行趋势)
 
 ```stata
 //这里留给did代
