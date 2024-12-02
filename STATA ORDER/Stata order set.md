@@ -42,10 +42,12 @@ body {
 - [6.Panel Data](#6panel-data)
   - [**1.固定效应**](#1固定效应)
 - [7.DID](#7did)
-  - [**1.平行趋势假定**](#1平行趋势假定)
+  - [**1.平行趋势假定（无法直接检验）**](#1平行趋势假定无法直接检验)
   - [**2.不满足平行趋势假定的解决方法**](#2不满足平行趋势假定的解决方法)
   - [**3.DID的扩展**](#3did的扩展)
 - [9.RDD](#9rdd)
+- [10.CIC](#10cic)
+- [11.SCM](#11scm)
 - [实用小代码stata](#实用小代码stata)
 - [一些方法](#一些方法)
 - [一些知识](#一些知识)
@@ -516,9 +518,31 @@ ivregress 2sls y (x1 = z1 z2) x2 x3, robust
 
 ## <div style="font-size:25px;text-align:center;">7.DID</div>
 
-###  <div style="font-size:20px;">**1.平行趋势假定**</div>
+###  <div style="font-size:20px;">**1.平行趋势假定（无法直接检验）**</div>
 
-***用多期数据进行之前期数的假定，作图来看是否满足***但是这不是并不是充分条件，只是经验假设
+1. ***用多期数据进行之前期数的假定，作图来看是否满足***但是这不是并不是充分条件，只是经验假设
+
+2. ***滞后期以及提前期加入*** 多期的平行趋势检验
+
+其前期系数需要接近0，而滞后期系数需要是显著的，**这是因为系数为0表示无这一项的对照组的结果和有这一项的处理组的结果，在其他效应不变的情况下，是平行的**
+之所以滞后期有系数，是因为所有时间的数据都被加进来了，***每年有每年自己的值***
+
+```stata
+//和上面的代码基本相同，但是加入了前期和滞后期
+xi: reg lnr i.repeal*i.year i.fip acc ir pi alcohol crack poverty income ur if bf15==1 [aweight=totpop], cluster(fip)
+//这里i表示对于其取值进行虚拟变量分类，stata中会选择一个类别作为基准变量，这样可以避免共线性。那么就有（3-1）*（5-1）个变量，同时这也会将每个虚拟变量放进去。
+//xi是 Stata 中的一个前缀命令，主要用于处理分类变量的交互项。它会自动为分类变量创建虚拟变量，以便更好地进行回归分析。
+```
+
+<p style="text-align:center;"><span style="font-weight:bold;color:red;background-color: yellow">剩下的画图命令可以参考坎宁安的代码</span></p>
+
+<div align="center">
+    <img src="stata的生成.png" width="50%">
+</div>
+
+<div align="center">
+    <img src="加入多期.png" width="50%">
+</div>
 
 ###  <div style="font-size:20px;">**2.不满足平行趋势假定的解决方法**</div>
 
@@ -567,33 +591,31 @@ xtset id year//设定时间和个体
 xtreg y treated time did, fe
 ```
 
-2. 多期DID--***由于个体变量受处理时间不同导致的，采用在式子中加入前期和滞后期***
-其前期系数需要接近0，而滞后期系数需要是显著的
-
-```stata
-//和上面的代码基本相同，但是加入了前期和滞后期
-xi: reg lnr i.repeal*i.year i.fip acc ir pi alcohol crack poverty income ur if bf15==1 [aweight=totpop], cluster(fip)
-//这里i表示对于其取值进行虚拟变量分类，stata中会选择一个类别作为基准变量，这样可以避免共线性。那么就有（3-1）*（5-1）个变量，同时这也会将每个虚拟变量放进去。
-//xi是 Stata 中的一个前缀命令，主要用于处理分类变量的交互项。它会自动为分类变量创建虚拟变量，以便更好地进行回归分析。
-```
-
-<p style="text-align:center;"><span style="font-weight:bold;color:red;background-color: yellow">剩下的画图命令可以参考坎宁安的代码</span></p>
+2. 多期DID，异时DID--***由于个体变量受处理时间不同导致***
 
 <div align="center">
-    <img src="stata的生成.png" width="50%">
+    <img src="异时DID.png" width="50%">
 </div>
 
-<div align="center">
-    <img src="加入多期.png" width="50%">
-</div>
+其检查平行趋势也是用上面的方法，也可以直接加入进行检验，同时可以检验多期政策
+[数据和代码](https://mp.weixin.qq.com/s?__biz=MzU5MjYxNTgwMg==&mid=2247488626&idx=1&sn=e86bc6351b37fe6e7d284bb3a2a706eb&chksm=fe1c5467c96bdd71b64876e1c36e5e21d1ff6098145cf755edeba352fe1b81fc23bd1dea020d&mpshare=1&scene=24&srcid=0622Rfl4mOgsWWIGeUzuDU2Q&sharer_sharetime=1592802221465&sharer_shareid=a6061020f4e7e9144454b9ea727d6d05&key=d9abbbe4b9a3fb83cfd8d2edd602a2c85e8e889206f934c4b2c9dd34a788468c37bb0ef8f9e7042719478bb9be21fba82154a6948d587eaddde29380ccee9cd1bd953f6a6984963c9dda0fd409ea7a2d&ascene=14&uin=MzExNDA3MzA3OA%3D%3D&devicetype=Windows+10+x64&version=6209007b&lang=zh_CN&exportkey=A6M8s2VBlGmZbh%2FHnr%2BTVWQ%3D&pass_ticket=spGGMfIdBnLGzmlA8fkx5KDf3oVfyDbneD%2Bq4tO3BF%2B5qnYMaq6TSb0kc5US%2BgQI)***这里实际上做得是多时点的平行趋势检验***
 
-1. 广义DID--若冲击在全部数据中存在，无控制组，前提是个体受冲击的影响不同
+3. 广义DID--***若冲击在全部数据中存在，无控制组，前提是个体受冲击的影响不同，或随着时间改变，其政策影响变化***
+
+接下来的示例是由于是人为生成的（正态），因此其本身是平行的（实际可能不同）。所以可以用残差看出y高出的值。实际上可以用以下代码看did差距
 
 ```stata
-//这里留给did代
+xtreg y x1 x2 //组内均值去个体固定
+predict e，ue //储存残差
+binscatter e time，line(connect) by(D)
+//by(D)表示用d值分组，这里是处理组和对照组
+//binscatter是画图，time是以时间为自变量
+//line（connect）表示绘制连接各分箱回归拟合线的线条，均值
+//其中的对应期数的系数就是我们的因果效应，即ATT
 ```
 
 4. 异质DID--对于每个组别的处理是异质的，加入异质组别的交互项
+多期 DID 估计的本质是多个不同处理效应的加权平均，我们看的是最后全部处理完的结果。由于异质性的原因，其系数平均的权重会产生偏差，这是由于上一小节说明了，每一个个体被处理时，是对所有个体平均的效果。可能会出现为组为非的情况（不同处理时间为一组）
 
 ```stata
 //这里留给did代
@@ -609,6 +631,9 @@ xi: reg lnr i.repeal*i.year i.fip acc ir pi alcohol crack poverty income ur if b
 
 ## <div style="font-size:25px;text-align:center;">9.RDD</div>
 
+## <div style="font-size:25px;text-align:center;">10.CIC</div>
+
+## <div style="font-size:25px;text-align:center;">11.SCM</div>
 
 
 
@@ -619,12 +644,25 @@ xi: reg lnr i.repeal*i.year i.fip acc ir pi alcohol crack poverty income ur if b
 ## <div style="font-size:25px;text-align:center;">实用小代码stata</div>
 
 ```stata
-count if contact == 1 //统计contact为1的个数
+//统计contact为1的个数
+count if contact == 1 /
+//删除变量的缺失值
+drop if var==. 
+//用于估计双重差分的固定效应模型（DID)有多少固定效应就往absorb中放
+reghdfe depvar [indepvars][if][in][weight],absorb(absvars)[options]
 ```
 
-```stata
-drop if var==. //删除变量的缺失值
-```
+<div align="center">
+    <img src="命令比较.png" width="70%">
+    <p style="font-size:18px;">多重固定效应</p>
+</div>
+
+
+
+
+
+
+
 
 <div style="page-break-after: always;"></div>
 
