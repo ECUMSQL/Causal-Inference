@@ -524,8 +524,8 @@ ivregress 2sls y (x1 = z1 z2) x2 x3, robust
 
 2. ***滞后期以及提前期加入*** 多期的平行趋势检验
 
-其前期系数需要接近0，而滞后期系数需要是显著的，**这是因为系数为0表示无这一项的对照组的结果和有这一项的处理组的结果，在其他效应不变的情况下，是平行的**
-之所以滞后期有系数，是因为所有时间的数据都被加进来了，***每年有每年自己的值***
+其前期系数需要接近0，而滞后期系数需要是显著的，**这是因为系数为0表示这一项的对照组的结果和有这一项的处理组的结果的，在其他效应不变的情况下，是平行的**
+之所以滞后期有系数，是因为所有时间的数据都被加进来了，***每年有每年自己的值***，若后期的系数基本相等，那么就几乎可以认为是同质的
 
 ```stata
 //和上面的代码基本相同，但是加入了前期和滞后期
@@ -593,14 +593,14 @@ xtreg y treated time did, fe
 
 2. 多期DID，异时DID--***由于个体变量受处理时间不同导致***
 
+***多期DID的最终产生的系数应该是基本不变的的，如果不是，那么就一定存在异质性处理效应***
+
 <div align="center">
     <img src="异时DID.png" width="50%">
 </div>
 
 其检查平行趋势也是用上面的方法，也可以直接加入进行检验，同时可以检验多期政策
 [数据和代码](https://mp.weixin.qq.com/s?__biz=MzU5MjYxNTgwMg==&mid=2247488626&idx=1&sn=e86bc6351b37fe6e7d284bb3a2a706eb&chksm=fe1c5467c96bdd71b64876e1c36e5e21d1ff6098145cf755edeba352fe1b81fc23bd1dea020d&mpshare=1&scene=24&srcid=0622Rfl4mOgsWWIGeUzuDU2Q&sharer_sharetime=1592802221465&sharer_shareid=a6061020f4e7e9144454b9ea727d6d05&key=d9abbbe4b9a3fb83cfd8d2edd602a2c85e8e889206f934c4b2c9dd34a788468c37bb0ef8f9e7042719478bb9be21fba82154a6948d587eaddde29380ccee9cd1bd953f6a6984963c9dda0fd409ea7a2d&ascene=14&uin=MzExNDA3MzA3OA%3D%3D&devicetype=Windows+10+x64&version=6209007b&lang=zh_CN&exportkey=A6M8s2VBlGmZbh%2FHnr%2BTVWQ%3D&pass_ticket=spGGMfIdBnLGzmlA8fkx5KDf3oVfyDbneD%2Bq4tO3BF%2B5qnYMaq6TSb0kc5US%2BgQI)***这里实际上做得是多时点的平行趋势检验***
-
-3. 广义DID--***若冲击在全部数据中存在，无控制组，前提是个体受冲击的影响不同，或随着时间改变，其政策影响变化***
 
 接下来的示例是由于是人为生成的（正态），因此其本身是平行的（实际可能不同）。所以可以用残差看出y高出的值。实际上可以用以下代码看did差距
 
@@ -614,11 +614,24 @@ binscatter e time，line(connect) by(D)
 //其中的对应期数的系数就是我们的因果效应，即ATT
 ```
 
+3. 广义DID--***若冲击在全部数据中存在，无控制组，前提是个体受冲击的影响不同，或随着时间改变，其政策影响变化***
+
 4. 异质DID--对于每个组别的处理是异质的，加入异质组别的交互项
-多期 DID 估计的本质是多个不同处理效应的加权平均，我们看的是最后全部处理完的结果。由于异质性的原因，其系数平均的权重会产生偏差，这是由于上一小节说明了，每一个个体被处理时，是对所有个体平均的效果。可能会出现为组为非的情况（不同处理时间为一组）
+多期 DID 估计的最后系数 ***是多个不同处理效应的加权平均*** ，我们看最后全部处理完的结果。***由于异质性的原因，ATT不一定相同，***按处理时间分组，有个控制组（也可以没有对照组，前后对照）。
+***此时我们需要考虑的此异质性是由于时间推移造成的ATT变化还是组间变化。***
+（具体看Imbens和anthy的文章还有bacon的文章（已下载））
+这里用的是Callaway and Sant'Anna (2021) 的方法，利用逆概率加权进行
 
 ```stata
-//这里留给did代
+csdid depvar [indepvars] [if] [in] [weight], [ivar(varname)] time(varname) gvar(varname) [options]
+//depvar：指定回归的被解释变量；
+//indepvars：指定回归的解释变量
+//ivar：指定面板回归中的个体标识，如国家 ID、企业 ID 等；
+//time：指定面板回归中的时间标识；
+//gvar：分组标识，按首次被处理的时间分组；
+//notyet: 定义 “从未被处理” 的样本 (Nevered-treated) 和 “还未被处理” 的样本 (Not-yet-treated) 为对照组。当不添加 notyet 时 (默认情况)，只选择 “从未被处理” 的样本 (Nevered-treated) 作为对照组。
+//method(method) 选项 drimp 为基于逆概率加权最小二乘法得到的双重稳健 ,dripw 为基于逆概率的普通最小二乘法,reg 为普通最小二乘法；stdipw 为标准化的逆概率加权法；ipw 为逆概率加权法。
+//agg(aggtype) 选项，用于选择计算平均处理效应的加权方法simple 对应上述的 Simple ATT；group 对应上述的 Group ATT；calendar 对应上述的 Calendar Time ATT；event 对应上述的 Dynamic ATT
 ```
 
 5. 队列DID--利用队列代替时间，利用截面数据代替序列数据
@@ -644,20 +657,26 @@ binscatter e time，line(connect) by(D)
 ## <div style="font-size:25px;text-align:center;">实用小代码stata</div>
 
 ```stata
-//统计contact为1的个数
+1 //统计contact为1的个数
 count if contact == 1 /
-//删除变量的缺失值
+2 //删除变量的缺失值
 drop if var==. 
-//用于估计双重差分的固定效应模型（DID)有多少固定效应就往absorb中放
+3 //用于估计双重差分的固定效应模型（DID）有多少固定效应就往absorb中放
 reghdfe depvar [indepvars][if][in][weight],absorb(absvars)[options]
+4 //DID画图代码 coefplot 
+coefplot,keep(admico_2 admico_1 admico0 admico1 admico2 admico3 mico4)vertical  addplot(line @b@at)
+
 ```
 
 <div align="center">
     <img src="命令比较.png" width="70%">
-    <p style="font-size:18px;">多重固定效应</p>
+    <p style="font-size:18px;">题3.多重固定效应</p>
 </div>
 
-
+<div align="center">
+    <img src="DID图.png" width="70%">
+    <p style="font-size:18px;">题4.DID图</p>
+</div>
 
 
 
