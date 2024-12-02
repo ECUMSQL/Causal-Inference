@@ -606,7 +606,7 @@ xtreg y treated time did, fe
 
 ```stata
 xtreg y x1 x2 //组内均值去个体固定
-predict e，ue //储存残差
+predict e，ue //储存残差,这里用残差是因为为了检查时间趋势，实际上就是因为时间趋势造成了不平行
 binscatter e time，line(connect) by(D)
 //by(D)表示用d值分组，这里是处理组和对照组
 //binscatter是画图，time是以时间为自变量
