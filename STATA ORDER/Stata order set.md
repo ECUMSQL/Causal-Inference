@@ -518,6 +518,8 @@ ivregress 2sls y (x1 = z1 z2) x2 x3, robust
 
 ## <div style="font-size:25px;text-align:center;">7.DID</div>
 
+DID本来就是对于政策进行研究的，所以基本都会涉及时间，而在队列DID中将时间分块
+
 ###  <div style="font-size:20px;">**1.平行趋势假定（无法直接检验）**</div>
 
 1. ***用多期数据进行之前期数的假定，作图来看是否满足***但是这不是并不是充分条件，只是经验假设
@@ -645,8 +647,13 @@ csdid depvar [indepvars] [if] [in] [weight], [ivar(varname)] time(varname) gvar(
 
 5. 队列DID--利用队列代替时间，利用截面数据代替序列数据
 
+队列DID主要用于无法使用面板数据的情况，但是我们也可以通过对于和时间有关的截面数据构建DID统计量（比如出生年份等）
+***传统的面板数据是每个时间个体都需要有数据（平衡面板），但是截面数据，则没有具体的要求，不一定要求个体相同。***
+[复现经典队列DID代码：下乡知青对农村教育的影响](https://zhuanlan.zhihu.com/p/689671372)
+
 ```stata
-//这里留给did代
+reghdfe yedu c.sdy_density#c.treat male han_ethn if rural==1, absorb(region1990 prov#year_birth c.primary_base#year_birth c.junior_base#year_birth) cluster(region1990)
+//基本所有DID都是这个类似的方法
 ```
 
 <div style="page-break-after: always;"></div>
@@ -729,3 +736,10 @@ coefplot,keep(admico_2 admico_1 admico0 admico1 admico2 admico3 mico4)vertical  
 >在实际的情况中，由于变量的变动衡量通常会受到单位的影响，而标准差衡量的则是分布，实际情况中，标准差下降一个单位说明数据发生了实际的变动，更能衡量自变量变动对于因变量的影响。
   
 2. 标准误就是对系数的估计的方差
+3. 置信度是指显著性的补，当落在置信区间时表示为不拒绝原假设，而当不在置信区间时拒绝原假设，同时这也分为单侧和双侧检验。单侧就是落在置信区间一侧为不拒绝，另一侧为拒绝。而0在置信区间则表明不能拒绝系数为0的原假设。
+
+<div align="center">
+    <img src="置信区间图.png" width="70%">
+    <p style="font-size:18px;">题3.置信区间图</p>
+</div>
+
