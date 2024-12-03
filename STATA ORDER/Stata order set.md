@@ -599,8 +599,7 @@ xtreg y treated time did, fe
     <img src="异时DID.png" width="50%">
 </div>
 
-其检查平行趋势也是用上面的方法，也可以直接加入进行检验，同时可以检验多期政策
-[数据和代码](https://mp.weixin.qq.com/s?__biz=MzU5MjYxNTgwMg==&mid=2247488626&idx=1&sn=e86bc6351b37fe6e7d284bb3a2a706eb&chksm=fe1c5467c96bdd71b64876e1c36e5e21d1ff6098145cf755edeba352fe1b81fc23bd1dea020d&mpshare=1&scene=24&srcid=0622Rfl4mOgsWWIGeUzuDU2Q&sharer_sharetime=1592802221465&sharer_shareid=a6061020f4e7e9144454b9ea727d6d05&key=d9abbbe4b9a3fb83cfd8d2edd602a2c85e8e889206f934c4b2c9dd34a788468c37bb0ef8f9e7042719478bb9be21fba82154a6948d587eaddde29380ccee9cd1bd953f6a6984963c9dda0fd409ea7a2d&ascene=14&uin=MzExNDA3MzA3OA%3D%3D&devicetype=Windows+10+x64&version=6209007b&lang=zh_CN&exportkey=A6M8s2VBlGmZbh%2FHnr%2BTVWQ%3D&pass_ticket=spGGMfIdBnLGzmlA8fkx5KDf3oVfyDbneD%2Bq4tO3BF%2B5qnYMaq6TSb0kc5US%2BgQI)***这里实际上做得是多时点的平行趋势检验***
+其检查平行趋势用下面的代码[数据和代码](https://mp.weixin.qq.com/s?__biz=MzU5MjYxNTgwMg==&mid=2247488626&idx=1&sn=e86bc6351b37fe6e7d284bb3a2a706eb&chksm=fe1c5467c96bdd71b64876e1c36e5e21d1ff6098145cf755edeba352fe1b81fc23bd1dea020d&mpshare=1&scene=24&srcid=0622Rfl4mOgsWWIGeUzuDU2Q&sharer_sharetime=1592802221465&sharer_shareid=a6061020f4e7e9144454b9ea727d6d05&key=d9abbbe4b9a3fb83cfd8d2edd602a2c85e8e889206f934c4b2c9dd34a788468c37bb0ef8f9e7042719478bb9be21fba82154a6948d587eaddde29380ccee9cd1bd953f6a6984963c9dda0fd409ea7a2d&ascene=14&uin=MzExNDA3MzA3OA%3D%3D&devicetype=Windows+10+x64&version=6209007b&lang=zh_CN&exportkey=A6M8s2VBlGmZbh%2FHnr%2BTVWQ%3D&pass_ticket=spGGMfIdBnLGzmlA8fkx5KDf3oVfyDbneD%2Bq4tO3BF%2B5qnYMaq6TSb0kc5US%2BgQI)***这里实际上做得是多时点的平行趋势检验***
 
 接下来的示例是由于是人为生成的（正态），因此其本身是平行的（实际可能不同）。所以可以用残差看出y高出的值。实际上可以用以下代码看did差距
 
