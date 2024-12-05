@@ -51,6 +51,7 @@ body {
 - [10.CIC](#10cic)
 - [11.SCM](#11scm)
 - [12.分位数回归](#12分位数回归)
+- [13.生存分析/div\>](#13生存分析div)
 - [实用小代码stata](#实用小代码stata)
 - [实用小代码R](#实用小代码r)
 - [一些方法](#一些方法)
@@ -709,6 +710,18 @@ rdrobust cod_any agemo_mda, covs(firstmonth) b(40) //采用40的带宽进行估�
 <div style="page-break-after: always;"></div>
 
 ## <div style="font-size:25px;text-align:center;">12.分位数回归</div>
+
+<div style="page-break-after: always;"></div>
+
+## <div style="font-size:25px;text-align:center;">13.生存分析/div>
+
+
+
+
+
+
+
+
 
 
 
