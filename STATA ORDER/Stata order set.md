@@ -46,9 +46,13 @@ body {
   - [**2.不满足平行趋势假定的解决方法**](#2不满足平行趋势假定的解决方法)
   - [**3.DID的扩展**](#3did的扩展)
 - [9.RDD](#9rdd)
+  - [**1.断点估计假设**](#1断点估计假设)
+  - [**2.断点估计**](#2断点估计)
 - [10.CIC](#10cic)
 - [11.SCM](#11scm)
+- [12.分位数回归](#12分位数回归)
 - [实用小代码stata](#实用小代码stata)
+- [实用小代码R](#实用小代码r)
 - [一些方法](#一些方法)
 - [一些知识](#一些知识)
 
@@ -662,11 +666,49 @@ reghdfe yedu c.sdy_density#c.treat male han_ethn if rural==1, absorb(region1990 
 
 ## <div style="font-size:25px;text-align:center;">9.RDD</div>
 
+[陈强RDD框架](https://www.stata.com/meeting/china24-Uone-Tech/slides/China24_Chen.pdf)
+
+###  <div style="font-size:20px;">**1.断点估计假设**</div>
+
+1. **连续性假设：** 除D外，Y是连续的，以及其他的变量也是连续的，不允许跳跃
+2. **有效性分配：** 规则D不受操纵，需要检测两侧的变量分布，密度检验
+3. **跳跃性假设：** 被解释变量必须在断点处跳跃
+
+```stata
+//stata代码
+```
+
+### <div style="font-size:20px;">**2.断点估计**</div>
+
+断点估计最需要注意的几个点：
+
+1. 带宽的选择
+2. 
+
+
+
+
+
+```stata
+//断点估计值 ，这个命令还能检验斜边量的两边平衡
+rdrobust y 断点变量,covs(协变量) //点估计值就是截距，还有置信区间
+rdrobust outcome_variable running_variable, c(cutoff_value) fuzzy(treatment_variable) //这个是模糊断点,其中定义了模糊断点的选项，以及断点值，一般不需要设置，fuzzy内部放处理变量
+rdrobust cod_any agemo_mda, covs(firstmonth) kernel(uniform) //表示用核函数进行加权，这里是均匀核函数
+rdrobust cod_any agemo_mda, covs(firstmonth) p(2) //采用局部多项式拟合，这里用的是2项式，为了避免非线性，这里还没有用到窗口
+rdrobust cod_any agemo_mda, covs(firstmonth) b(40) //采用40的带宽进行估计
+```
+
+<div style="page-break-after: always;"></div>
+
 ## <div style="font-size:25px;text-align:center;">10.CIC</div>
+
+<div style="page-break-after: always;"></div>
 
 ## <div style="font-size:25px;text-align:center;">11.SCM</div>
 
+<div style="page-break-after: always;"></div>
 
+## <div style="font-size:25px;text-align:center;">12.分位数回归</div>
 
 
 
@@ -683,7 +725,10 @@ drop if var==.
 reghdfe depvar [indepvars][if][in][weight],absorb(absvars)[options]
 4 //DID画图代码 coefplot 
 coefplot,keep(admico_2 admico_1 admico0 admico1 admico2 admico3 mico4)vertical  addplot(line @b@at)
-
+5. //导入excel数据
+import excel "path/to/your/file.xlsx", sheet("Sheet1") firstrow clear
+    //导入csv数据
+import delimited "path/to/your/file.csv", clear
 ```
 
 <div align="center">
@@ -695,6 +740,50 @@ coefplot,keep(admico_2 admico_1 admico0 admico1 admico2 admico3 mico4)vertical  
     <img src="DID图.png" width="70%">
     <p style="font-size:18px;">题4.DID图</p>
 </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div style="page-break-after: always;"></div>
+
+## <div style="font-size:25px;text-align:center;">实用小代码R</div>
+
+```R
+1 #导入csv数据进入
+data <- read.csv("path/to/your/file.csv")
+#导入excel数据进入
+install.packages("readxl")
+library(readxl)
+data <- read_excel("path/to/your/file.xlsx")
+#导入stata数据进入
+install.packages("haven")
+library(haven)
+data <- read_dta("path/to/your/file.dta")
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
