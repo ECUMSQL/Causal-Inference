@@ -1,18 +1,48 @@
-<!-- <style>
+<!-- 封面样式 -->
+<style>
 @page {
     size: A4;
     margin: 20mm;
 }
 body {
     font-family: Arial, sans-serif;
-    font-size: 14pt; /* 调整全局字体大小 */
+    font-size: 14pt;
     line-height: 1.5;
 }
-</style> -->
+.cover-page {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    text-align: center;
+}
+.cover-title {
+    font-size: 36pt;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+.cover-subtitle {
+    font-size: 24pt;
+    margin-bottom: 40px;
+}
+.cover-author {
+    font-size: 18pt;
+    margin-bottom: 20px;
+}
+.cover-date {
+    font-size: 16pt;
+}
+</style>
 
-<div align="center" style="font-size:23px;">The empirical method of economic research and stata code</div>
-
-在做任何分析之前都要做协变量平衡分析，防止由于对照组和控制组变量分布造成的误差。
+<!-- 封面内容 -->
+<div class="cover-page">
+    <div class="cover-title">经济研究的实证方法与Stata代码</div>
+    <div class="cover-subtitle">The Empirical Method of Economic Research and Stata Code</div>
+    <div class="cover-author">作者:Laiqi Song</div>
+    <div class="cover-date">日期: 2024年12月5日</div>
+    在做任何分析之前都要做协变量平衡分析，防止由于对照组和控制组变量分布造成的误差。
+</div>
 
 - [1.Random Experiment](#1random-experiment)
 - [2.OLS](#2ols)
@@ -51,9 +81,8 @@ body {
 - [10.CIC](#10cic)
 - [11.SCM](#11scm)
 - [12.分位数回归](#12分位数回归)
-- [13.生存分析/div\>](#13生存分析div)
+- [13.生存分析](#13生存分析)
 - [实用小代码stata](#实用小代码stata)
-- [实用小代码R](#实用小代码r)
 - [一些方法](#一些方法)
 - [一些知识](#一些知识)
 
@@ -713,7 +742,7 @@ rdrobust cod_any agemo_mda, covs(firstmonth) b(40) //采用40的带宽进行估�
 
 <div style="page-break-after: always;"></div>
 
-## <div style="font-size:25px;text-align:center;">13.生存分析/div>
+## <div style="font-size:25px;text-align:center;">13.生存分析</div>
 
 
 
@@ -753,42 +782,6 @@ import delimited "path/to/your/file.csv", clear
     <img src="DID图.png" width="70%">
     <p style="font-size:18px;">题4.DID图</p>
 </div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-<div style="page-break-after: always;"></div>
-
-## <div style="font-size:25px;text-align:center;">实用小代码R</div>
-
-```R
-1 #导入csv数据进入
-data <- read.csv("path/to/your/file.csv")
-#导入excel数据进入
-install.packages("readxl")
-library(readxl)
-data <- read_excel("path/to/your/file.xlsx")
-#导入stata数据进入
-install.packages("haven")
-library(haven)
-data <- read_dta("path/to/your/file.dta")
-```
-
-
-
-
-
-
-
 
 
 
