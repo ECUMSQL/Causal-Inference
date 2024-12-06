@@ -44,19 +44,34 @@ body {
     在做任何分析之前都要做协变量平衡分析，防止由于对照组和控制组变量分布造成的误差。
 </div>
 
+- [1.OLS](#1ols)
 - [9.RDD](#9rdd)
 - [实用小代码](#实用小代码)
 
 <div style="page-break-after: always;"></div>
 
+## <div style="font-size:25px;text-align:center;">1.OLS</div>
+
+```R
+lm(Y ~ X + C, data = data)#表示进行OLS回归，其中Y为被解释变量，X为解释变量，C为控制变量
+#画散点图
+    p <- ggplot(data, aes(x = x, y = y))+
+    # 添加散点图层
+    geom_point() +
+    # 添加标题和坐标轴标签（可选）
+    labs(title = "Scatter Plot", x = "X Variable", y = "Y Variable") +
+    # 选择主题（可选，这里使用默认主题）
+    theme_bw()
+    # 显示绘制的散点图
+    print(p)
+```
 
 
 
 
 
 
-
-
+<div style="page-break-after: always;"></div>
 
 ## <div style="font-size:25px;text-align:center;">9.RDD</div>
 
@@ -68,7 +83,14 @@ summary(rdrobust(Y,X,covs = C,  h = 40))# 使用带宽为40进行RD估计
 
 ```
 
+利用RDHonest进行画图和比较更加广泛的RDD分析 [RDDHonest画图](https://github.com/kolesarm/RDHonest/blob/master/doc/RDHonest.pdf)
+[RDHonest公式文档，fuzzy or sharp](https://cran.r-project.org/web//packages/RDHonest/RDHonest.pdf)
 
+```R
+#参数自己去看文档，这里表示出来所有的参数
+RDHonest(formula,data,subset,weights,cutoff = 0,M,kern = "triangular",na.action,opt.criterion = "MSE",h,se.method = "nn",alpha = 0.05,beta = 0.8,J = 3,sclass = "H",
+result[["coefficients"]] #看估计的参数
+```
 
 
 
@@ -95,4 +117,9 @@ Y <- my_data$cod_any
 5.#删除数据列表中的变量值的行
 my_data <- subset(my_data, firstmonth!= 1)
 my_data <- my_data[!(my_data$firstmonth == 1), ]
+6.#看数据frame中的数据列表,
+data[['列表名称']]
+data$列表名称[“数据标签”]
+7.#数值转换
+data$列表名称 <- as.numeric(data$列表名称)#不同的转换就是不同的as.类型
 ```
