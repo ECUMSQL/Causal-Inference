@@ -959,6 +959,45 @@ xtreg y treated time did, fe
 
 [TWFE以及多期DID事件研究法操作](https://mp.weixin.qq.com/s/k2kxnRvzHFk3LLdwByZzyw)
 其操作经常会出现多重共线性问题，那么可以采用自己去掉基期，但是最好去现期和前期，不然若是去掉滞后期，若前期的系数的显著的，那么就无法分别前期系数的差异了。（相对于不显著显著，那么到底显不显著）。可以自己通过操作进行去除，事件研究法就可以这样。
+
+```stata
+//这也是事件研究的方法，看系数
+//eventstudyinteract 人为舍弃-1期，最后一组为从不处理组，删除最后一期
+drop if wave==11
+gen time_to_treat =wave-wave_hosp
+replace time_to_treat = 0 if wave_hosp==11
+gen treat = !(wave_hosp==11)
+gen never_treat=(wave_hosp==11)
+tab time_to_treat
+forvalues t= -3(1)2{
+	if `t'<-1{
+		local tname = abs(`t')
+		gen g_m`tname'=time_to_treat==`t'
+	}
+	else if `t'>=0{
+		gen g_`t'=time_to_treat==`t'
+	}
+}
+eventstudyinteract oop_spend g_*,cohort(wave_hosp) control_cohort(never_treat) absorb(i.hhidpn i.wave) vce(cluster hhidpn)
+
+
+//4.无从不处理组
+gen time_to_treat =wave-wave_hosp
+gen treat = !(wave_hosp==11)
+gen never_treat=(wave_hosp==11)
+tab time_to_treat
+forvalues t= -3(1)3{
+	if `t'<-1{
+		local tname = abs(`t')
+		gen g_m`tname'=time_to_treat==`t'
+	}
+	else if `t'>=0{
+		gen g_`t'=time_to_treat==`t'
+	}
+}
+eventstudyinteract oop_spend g_*,cohort(wave_hosp) control_cohort(never_treat) absorb(i.hhidpn i.wave) vce(cluster hhidpn)
+```
+
 <div align="center">
     <img src="stagger did数据.png" width="70%">
 </div>
@@ -966,7 +1005,7 @@ xtreg y treated time did, fe
 可以采用 $panelview$ 命令进行可视化
 <font color=purple>但是多期did存在平行趋势以及时间的处理异质性等原因</font>导致多期DID估计的平均处理效应**不准确**，分别反映在培根分解上（处理的个体异质性导致加权权重出现问题，出现负权重冲解出来）
 多期 DID 估计的最后系数 ***是多个不同处理效应（不同组）的加权平均（异质性）*** 
-
+<p style="text-align:center;"><span style="font-weight:bold;color:red;background-color: yellow">根据代码的实际操作，是用滞后期进行操作的，那么不管任何处理时间的组，都存在滞后期，那么就一定存在对照组以及加权问题</span></p>
 <div align="center">
     <img src="DID问题存在的元原因.png" width="70%">
 </div>
