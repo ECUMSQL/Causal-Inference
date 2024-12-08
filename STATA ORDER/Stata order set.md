@@ -74,7 +74,8 @@ body {
 - [7.DID](#7did)
   - [**1.平行趋势假定（无法直接检验）**](#1平行趋势假定无法直接检验)
   - [**2.不满足平行趋势假定的解决方法**](#2不满足平行趋势假定的解决方法)
-  - [**3.DID的扩展**](#3did的扩展)
+  - [***3.DID形式***](#3did形式)
+  - [4.DID的扩展](#4did的扩展)
   - [**4.事件研究法ES**](#4事件研究法es)
 - [9.RDD](#9rdd)
   - [**1.断点估计假设**](#1断点估计假设)
@@ -531,16 +532,16 @@ ivregress 2sls y (x1 = z1 z2) x2 x3, robust
 
 ***注意是平衡面板***
 
-1. 合并最小二乘法（需要满足严格外生性，基本和下面的没啥差别）
-2. 固定效应demean
+1. **合并最小二乘法（**需要满足严格外生性，基本和下面的没啥差别）
+2. **固定效应demean**
 
     ```stata
     xtreg y x1 x2 x3, fe  //固定效应
     ```
 
     其无法解释双向因果和随时间变化的异质性（这是由于demean去掉的是不随时间变化的异质性）
-
-
+3. **注意事项**
+    固定效应也有高纬度，当控制了高纬度就无需控制低纬度，有时候控制高纬度的固定会更准确，比如时间-省份固定效应
 
 
 
@@ -555,15 +556,30 @@ ivregress 2sls y (x1 = z1 z2) x2 x3, robust
 
 DID本来就是对于政策进行研究的，所以基本都会涉及时间，而在队列DID中将时间分块
 
+***<font color=red>DID的假设:</font>***
+
+1. 平行趋势假设（认为事前平行使反事实也平行
+2. 政策影响无溢出效应或交互效应（SUVTA）
+3. 无预期效应
+4. 处理效应同质
+
+***平行趋势假设和安慰剂检验必做***
+>DID流程：
+    1. 首先进行平行趋势检验，根据实际的处理多期还是同时间进行
+    2. 其次进行根据实际情况选择DID大家庭
+    3. 安慰剂检验，稳健性检验，异质性检验
+
 ###  <div style="font-size:20px;">**1.平行趋势假定（无法直接检验）**</div>
 
 1. ***用多期数据进行之前期数的假定，作图来看是否满足***但是这不是并不是充分条件，只是经验假设
 
-2. ***滞后期以及提前期加入*** 多期的平行趋势检验
-
-其前期系数需要接近0，而滞后期系数需要是显著的，**这是因为系数为0表示这一项的对照组的结果和有这一项的处理组的结果的，在其他效应不变的情况下，是平行的**
-之所以滞后期有系数，是因为所有时间的数据都被加进来了，***每年有每年自己的值***，若后期的系数基本相等，那么就几乎可以认为是同质的
-***若系数变化，由于处理时间相同，可以说明其动态变化，时间异质性***
+```stata
+xtdidreg 方法画图
+```
+2. ***滞后期以及提前期加入*** 多期的平行趋势检验，若 ***是多时点DID，那么这就是<font color=green>事件研究法</font>***
+**同一时间处理：**
+    其前期系数需要接近0，而滞后期系数需要是显著的，**这是因为系数为0表示这一项的对照组的结果和有这一项的处理组的结果的，在其他效应不变的情况下，是平行的**
+    滞后期的系数是所有**组的处理后期**的加权平均值，而这里可能存在**组异质性偏差**。同时滞后期每年的系数不同，是因为可能存在**政策的时间效应以及纯时间效应**（可以看下文的数据结构）
 
 ```stata
 //和上面的代码基本相同，但是加入了前期和滞后期
@@ -582,9 +598,13 @@ xi: reg lnr i.repeal*i.year i.fip acc ir pi alcohol crack poverty income ur if b
     <img src="加入多期.png" width="50%">
 </div>
 
+**同一时间处理：** 检查平行趋势就需要事件研究法
+
+
+
 ###  <div style="font-size:20px;">**2.不满足平行趋势假定的解决方法**</div>
 
-1. 增加组-时间固定效应
+1. ***增加组-时间固定效应*** 这是为了**去除组的时间异质性**
 
 ```stata
 //teset告诉我们面板数据的实际结构
@@ -593,7 +613,7 @@ gen did = treated * (year >= 政策实施时间点)  // 政策是在2010年实�
 xtreg y treated (year >= 政策实施时间点) did i.group_id#i.year, fe  // DID 可加聚类稳健的标准误 vce(cluster group_id)
 ```
 
-2. 三重差分 实际上是安慰剂检验的变种
+2. ***三重差分*** 这是为了**去除时间的异质性**
 三重差分和实际的二重差分也是使用xtreg命令，但是根据函数形式，其需要构建更多的二重交互项和一个三重交互项
 其实际上是在二重差分的基础上，加入了大组（州）中的不与控制相关的另一个组，从而进行差分去除大组内的平行趋势的干扰，***但是在实际上这并不是充分的，因为无法保证安慰剂组与实验组在两大组内的关系相同***
 
@@ -605,7 +625,7 @@ gen 多个did
 xtreg y 多个did 控制变量  聚类稳健的标准误//同时也可以加入分组-时间的固定效应
 ```
 
-3. 使用安慰剂检验(证伪检验，是否满足平行趋势)
+3. ***使用安慰剂检验***(证伪检验，是否满足平行趋势)
 ***核心思想：*** 通过构造虚拟的干预（通常是模拟出不存在实际影响的 “假” 处理情况），然后按照与原研究相同的分析步骤去进行分析，如果在这种虚拟情况下依然得出类似原研究中有显著影响的结果，那就意味着原结果可能是受到了其他未控制因素等偏误影响而不可靠；反之，如果虚拟情况下没有得出显著结果，则在一定程度上可以增强对原研究中所发现因果关系等结论的信心。
 
 >安慰剂检验实际上：就是找到安慰剂组再进行一次DID，如果系数为0那么就证明平行趋势假设是有效的
@@ -614,8 +634,312 @@ xtreg y 多个did 控制变量  聚类稳健的标准误//同时也可以加入�
 reg y treated##time,fe //这里的##表示同时加入两个自变量和他们的交互项
 同时在断点RDD中仍然存在着安慰剂检验也是差不多，检验是否存在操纵以及其他变量的跳变
 ```
+   *主要方法*
+   1. 改变政策发生时间
+   2. 随机生成实验组，需要重复多次
+   3. 替换样本
+   4. 替换变量
 
-### <div style="font-size:20px;">**3.DID的扩展**</div>
+### ***<div style="font-size:20px;">3.DID形式</div>***
+
+1. ***政策（处理效果）不随时间变化，即之前的时间趋势基本不变***
+
+<table>
+<thead>
+<tr class="header">
+<th>id</th>
+<th>year</th>
+<th>y</th>
+<th>d</th>
+<th>t</th>
+<th>dt</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td>1</td>
+<td>3</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td>1</td>
+<td>2</td>
+<td>4</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr class="odd">
+<td>1</td>
+<td>3</td>
+<td>5</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td>1</td>
+<td>4</td>
+<td>6</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr class="odd">
+<td>1</td>
+<td>5</td>
+<td>10</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+</tr>
+<tr class="even">
+<td>1</td>
+<td>6</td>
+<td>11</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+</tr>
+<tr class="odd">
+<td>1</td>
+<td>7</td>
+<td>12</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+</tr>
+<tr class="even">
+<td>1</td>
+<td>8</td>
+<td>13</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+</tr>
+<tr class="odd">
+<td>2</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>2</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr class="odd">
+<td>2</td>
+<td>3</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>4</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr class="odd">
+<td>2</td>
+<td>5</td>
+<td>5</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>6</td>
+<td>6</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+</tr>
+<tr class="odd">
+<td>2</td>
+<td>7</td>
+<td>7</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>8</td>
+<td>8</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+很明显可以看出，政策的y虽然在一直变化，但是去除了时间趋势之后，其真正的处理效应是不变的。
+
+***2. 政策（处理效果）随时间变化，即之前的时间趋势基本不变***
+<table>
+<thead>
+<tr class="header">
+<th>id</th>
+<th>year</th>
+<th>y</th>
+<th>d</th>
+<th>t</th>
+<th>dt</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td>1</td>
+<td>3</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td>1</td>
+<td>2</td>
+<td>4</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr class="odd">
+<td>1</td>
+<td>3</td>
+<td>5</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td>1</td>
+<td>4</td>
+<td>6</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr class="odd">
+<td>1</td>
+<td>5</td>
+<td>8</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+</tr>
+<tr class="even">
+<td>1</td>
+<td>6</td>
+<td>11</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+</tr>
+<tr class="odd">
+<td>1</td>
+<td>7</td>
+<td>15</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+</tr>
+<tr class="even">
+<td>1</td>
+<td>8</td>
+<td>20</td>
+<td>1</td>
+<td>1</td>
+<td>1</td>
+</tr>
+<tr class="odd">
+<td>2</td>
+<td>1</td>
+<td>1</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>2</td>
+<td>2</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr class="odd">
+<td>2</td>
+<td>3</td>
+<td>3</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>4</td>
+<td>4</td>
+<td>0</td>
+<td>0</td>
+<td>0</td>
+</tr>
+<tr class="odd">
+<td>2</td>
+<td>5</td>
+<td>5</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>6</td>
+<td>6</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+</tr>
+<tr class="odd">
+<td>2</td>
+<td>7</td>
+<td>7</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>8</td>
+<td>8</td>
+<td>0</td>
+<td>1</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+很容易看出去除了时间效应之后，其处理效应即政策效应也是变化的
+
+***多期DID存在的问题***：
+
+1. **处理效应随时间变化问题 导致一开始的平行趋势失效**
+2. 处理效应异质性问题 --导致了负权重的发生，即最后一期的权重过大导致正处理被其中的负号抵消。
+3. ***注意：*** 和处理的个体异质性有，就是加权使得负权重出现，对于坏的加大权，就是加权培根分解的第一项出现问题。
+
+### <div style="font-size:20px;">4.DID的扩展</div>
 [DID大家庭参考](https://yuzhang.net/2023/10/25/Handbook%20of%20DID%20family_20231026/)
 
 根据不同的情况，我们可以使用不同DID的变种
@@ -630,66 +954,86 @@ xtset id year//设定时间和个体
 xtreg y treated time did, fe
 ```
 
-2. 多期DID，异时DID--***由于个体变量受处理时间不同导致***
+2. <font color=red>多期DID</font>，异时DID-- ***由于个体变量受处理时间不同导致***
 
-***多期DID估计不出来系数，只能先进行平行趋势检验***
-多期 DID 估计的最后系数 ***是多个不同处理效应的加权平均***  
+[TWFE以及多期DID事件研究法操作](https://mp.weixin.qq.com/s/k2kxnRvzHFk3LLdwByZzyw)
 <div align="center">
-    <img src="异时DID.png" width="50%">
+    <img src="stagger did数据.png" width="70%">
 </div>
 
-其检查平行趋势用下面的代码[数据和代码](https://mp.weixin.qq.com/s?__biz=MzU5MjYxNTgwMg==&mid=2247488626&idx=1&sn=e86bc6351b37fe6e7d284bb3a2a706eb&chksm=fe1c5467c96bdd71b64876e1c36e5e21d1ff6098145cf755edeba352fe1b81fc23bd1dea020d&mpshare=1&scene=24&srcid=0622Rfl4mOgsWWIGeUzuDU2Q&sharer_sharetime=1592802221465&sharer_shareid=a6061020f4e7e9144454b9ea727d6d05&key=d9abbbe4b9a3fb83cfd8d2edd602a2c85e8e889206f934c4b2c9dd34a788468c37bb0ef8f9e7042719478bb9be21fba82154a6948d587eaddde29380ccee9cd1bd953f6a6984963c9dda0fd409ea7a2d&ascene=14&uin=MzExNDA3MzA3OA%3D%3D&devicetype=Windows+10+x64&version=6209007b&lang=zh_CN&exportkey=A6M8s2VBlGmZbh%2FHnr%2BTVWQ%3D&pass_ticket=spGGMfIdBnLGzmlA8fkx5KDf3oVfyDbneD%2Bq4tO3BF%2B5qnYMaq6TSb0kc5US%2BgQI)***这里实际上做得是多时点的平行趋势检验***
+可以采用 $panelview$ 命令进行可视化
+<font color=purple>但是多期did存在平行趋势以及时间的处理异质性等原因</font>导致多期DID估计的平均处理效应**不准确**，分别反映在培根分解上（处理的个体异质性导致加权权重出现问题，出现负权重冲解出来）
+多期 DID 估计的最后系数 ***是多个不同处理效应（不同组）的加权平均（异质性）*** 
 
-接下来的示例是由于是人为生成的（正态），因此其本身是平行的（实际可能不同）。所以可以用残差看出y高出的值。实际上可以用以下代码看did差距
+<div align="center">
+    <img src="DID问题存在的元原因.png" width="70%">
+</div>
 
-```stata
-//这里实际上是平行趋势检验，用reg的方式强，可以放几个都行
-xtreg y x1 x2 //组内均值去个体固定，xtreg只能两个固定效应
-predict e，ue //储存残差,这里用残差是因为为了检查时间趋势，实际上就是因为时间趋势造成了不平行
-binscatter e time，line(connect) by(D)
-//by(D)表示用d值分组，这里是处理组和对照组
-//binscatter是画图，time是以时间为自变量
-//line（connect）表示绘制连接各分箱回归拟合线的线条，均值
-```
-直接出结果
+<div align="center">
+    <img src="异时DID.png" width="70%">
+</div>
 
-```stata
-//1 用这个命令需要将处理变量设置为连续变量，加个c.，进行多时点的DID时需要从未处理组，然后加入估计
-reghdfe y c.D x1 x2, absorb(id time) vce(robust)//看其系数，因为这里假设同质性，多个固定效应用这个
-//2 用这个命令是文章中带有的，会更加麻烦。首先定义从未处理组作为控制组,可以用最后一期处理的当从未处理
-gen cohort=.
-gen refy=wave-cohort //设定处理时期的相对时期
-tab refy,miss gen(devent) //产生哑变量 -1和最后处理不放
-eventstudyinteract oop_spend devent*,cohort(cohort) control_cohort(never_treated) absorb(hhidpn wave) vce(cluster hhidpn)
-//带进去参数就行，傻子都会吧
-matrix b=e(b_iw) //提取系数特定函数
-matrix V=e(V_iw)
-ereturn post b V
-// 画图
-coefplot,vertical
-```
+<p style="text-align:center;"><span style="font-weight:bold;color:red;background-color: yellow">上面的式子很容易发现最后的处理组无法对照产生的误差（普通组自我对照也有时间趋势问题），也可以看出Treat_it若最后处理组和前期处理组（所有），那么都是1，就会产生偏误，</span></p>
+
+   1. Bacon decomposition--培根分解（加权解决异质处理效应）
+      培根提出双向固定效应估计量等于数据中所有可能的两组或两期估计量的加权平均值（多期最后一期出现问题），这是一种评估偏误的手段。可以看出交叠DID的应用效果。
+      其假设为：1. 平行趋势假设 2. 随时间固定的处理效应
+      其培根分解的第三项是由于处理时间趋势异质性以及时间趋势造成的差异，前两项的处理效应被冲解为**负权重**
+      培根认为所有处理期的对照组都是未处理期之前期的加权（包括已经处理的组）
+      ***双向固定效应估计量 (TWFEDD) 等于数据中所有可能的两组或两期 DD 估计量的加权平均值。***
+
+       <div align="center">
+           <img src="Bacon分解.png" width="70%">
+       </div>
+
+       ***该式子告诉我们主要是平行趋势假定以及时间不变的处理效应而时间趋势异质性（个体时间跳跃以）被两个假设给内部消除了，处理效应的异质性会使加权的权重出现问题***
+       但是培根分解无法解决**负权重**的显示
+
+       ```stata
+       bacondecomp asmrs post pcinc asmrh cases, stub(Bacon_) robust //这里是培根分解，post为处理变量
+       ```
+       [培根分解操作及解释](https://mp.weixin.qq.com/s/NKy9uBMzijNzn6tR6lTXpQ)
+
+   2. Callaway and Sant'Anna 的识别异质性did的想法：
+      其适用情景：
+
+      - 时间分为多期
+      - 实验组受到政策冲击的时间并非同一
+      - 实验组和对照组只有在控制了协变量之后才满足平行趋势假定
+
+      ***结果与TWFE做比较，可以看看基准回归是否合理***
+      不存在从未接受处理组时，  Callaway and Sant'Anna 提出的估计量可以使用尚未接受处理组作为控制组，IＷ 估计量则需 要对样本进行删减并使用最后接受处理的样本作为控制组
+      ```stata
+      csdid depvar [indepvars] [if] [in] [weight], [ivar(varname)] time(varname) gvar(varname) [options]
+      //添加 agg(aggtype) 选项，用于选择计算平均处理效应的加权方法。可选择的加权方法包括：simple 对应上述的 Simple ATT；group 对应上述的 Group ATT；calendar 对应上述的 Calendar Time ATT；event 对应上述的 Dynamic ATT。
+      //notyet: 定义 “从未被处理” 的样本 (Nevered-treated) 和 “还未被处理” 的样本 (Not-yet-treated) 为对照组。当不添加 notyet 时 (默认情况)，只选择 “从未被处理” 的样本 (Nevered-treated) 作为对照组。
+      //加 method(method) 选项，用于选择估计方法。可选择的估计方法包括：drimp 为基于逆概率加权最小二乘法得到的双重稳健 DID 估计量，为默认估计方法；dripw 为基于逆概率的普通最小二乘法得到的双重稳健 DID 估计量；reg 为普通最小二乘法；stdipw 为标准化的逆概率加权法；ipw 为逆概率加权法。
+      ```
+      
+   3. Stacked DID 堆叠DID
+      每个堆叠包括来自同一时间段内接受治疗的一组单位和从未接受过治疗的所有单位的所有观察结果。通过将单个治疗单位队列与从未治疗过的单位进行比较，在每个堆叠中确定效果。
+      如果效果因治疗队列而异，则可能会偏向双向固定效应
+      ```stata
+      stackedev {outcome} {leads_lags_list} [if] [in] [weight] , cohort(variable) time(variable) never_treat(variable) unit_fe(variable) clust_unit(variable) [options]  
+       ```
+
+      ***谨慎采用***
+   4.  did2s 两步回归法
+      当处理组个体接受处理的时间是交错的，而且平均处理效应随着组别以及时间发生变化时，常见的双重差分估计就不能识别一个典型处理效应并做出合理的度量
+      在第一阶段识别组别效应和时期效应，在移除了组别效应和时期效应之后，在第二阶段，通过比较处理组和对照组的结果差异来识别平均处理效应。两阶段方法对于被处理的时间是交错的以及处理效应具有异质性的情况下估计结果是稳健的
+   5. did_multiplegt 多期多个体模型
+       解决多期多个个个体，处理从进入到退出的过程
+   6. did_imputation 事件研究法的稳健估计量
+       其为插补估计量，用其他的y0作为控制组进行估计
+       ***思想：*** 利用从 未接受处理的样本或尚未接受处理的样本估计出每个处理组个体每个时期的反事实结果。 此后， 计算处理组个体的处理效应， 即真实结果与反事实结果的差。 最后， 将个体层面 的处理效应进行加总， 即得到平均处理效应的估计。
+       ***基于插补的估计值有很多***
+
+---
 3. 广义DID--若冲击在全部数据中存在，无控制组，前提是个体受冲击的影响不同，或随着时间改变，其政策影响变化
 ***其实用RDD比DID好***
 
-4. 异质DID--对于每个组别的处理是异质的，加入异质组别的交互项
-多期 DID 估计的最后系数 ***是多个不同处理效应的加权平均*** ，我们看最后全部处理完的结果。
-***由于异质性的原因，ATT不一定相同，***
-按处理时间分组，有个控制组（也可以没有对照组，前后对照）。
-***此时我们需要考虑的此异质性是由于时间推移造成的ATT变化还是组间变化。***
-（具体看Imbens和anthy的文章还有bacon的文章（已下载））
-这里用的是Callaway and Sant'Anna (2021) 的方法，利用逆概率加权进行
-
-```stata
-csdid depvar [indepvars] [if] [in] [weight], [ivar(varname)] time(varname) gvar(varname) [options]
-//depvar：指定回归的被解释变量；
-//indepvars：指定回归的解释变量
-//ivar：指定面板回归中的个体标识，如国家 ID、企业 ID 等；
-//time：指定面板回归中的时间标识；
-//gvar：分组标识，按首次被处理的时间分组；
-//notyet: 定义 “从未被处理” 的样本 (Nevered-treated) 和 “还未被处理” 的样本 (Not-yet-treated) 为对照组。当不添加 notyet 时 (默认情况)，只选择 “从未被处理” 的样本 (Nevered-treated) 作为对照组。
-//method(method) 选项 drimp 为基于逆概率加权最小二乘法得到的双重稳健 ,dripw 为基于逆概率的普通最小二乘法,reg 为普通最小二乘法；stdipw 为标准化的逆概率加权法；ipw 为逆概率加权法。
-//agg(aggtype) 选项，用于选择计算平均处理效应的加权方法simple 对应上述的 Simple ATT；group 对应上述的 Group ATT；calendar 对应上述的 Calendar Time ATT；event 对应上述的 Dynamic ATT
-```
+4. 异质DID--实际上就是多时点did的翻版，其中的问题存在于处理效应的异质性，但是 ***普通的组间异质性并不会出现偏差*** 。
+   
 
 5. 队列DID--利用队列代替时间，利用截面数据代替序列数据
 
@@ -698,13 +1042,16 @@ csdid depvar [indepvars] [if] [in] [weight], [ivar(varname)] time(varname) gvar(
 [复现经典队列DID代码：下乡知青对农村教育的影响](https://mp.weixin.qq.com/s?__biz=MzU4ODU3NjM2MA==&mid=2247485140&idx=1&sn=c3bf715a9429ec502dd775c7e618eed9&chksm=fddbe5d3caac6cc50f77a92afe5d4893c6f27bce4d385df4764033423bc8708842b11ddeecd9&token=1767907936&lang=zh_CN#rd)
 这个队列DID就是用出现年份划分作为受冲击前后的差，用去了知青和没去知青作为对照组。进行差分构建交互项。
 同时也分为标准情况和简约情况，就是经典二期did，和加入滞后项和先前项的区别。
-
+使用横截面数据来评估某一历史事件对个体的长期影响。常用于评估特殊历史事件对个体和家庭的长期影响（通常使用的都是横截面数据）。与标准DID相似，队列DID也有两个维度的变异，通常而言，一个维度是地区，另一个维度是出生（年龄）队列
 ```stata
 reghdfe yedu c.sdy_density#c.treat male han_ethn if rural==1, absorb(region1990 prov#year_birth c.primary_base#year_birth c.junior_base#year_birth) cluster(region1990)
 //基本所有DID都是这个类似的方法
 ```
 
+6. 混合截面DID
+
 ###  <div style="font-size:20px;">**4.事件研究法ES**</div>
+为了平行趋势
 
 [解决了异质性处理效应以及组间异质性的问题](https://yuzhang.net/2023/11/11/Handbook%20of%20Event%20Study/#正确控制组群异质性时间趋势)
 事件研究法为冲击的时间动态提供了丰富的细节（以图形直观展示），同时也可以用于检验平行趋势假设。
@@ -713,10 +1060,10 @@ reghdfe yedu c.sdy_density#c.treat male han_ethn if rural==1, absorb(region1990 
 2. 无预期效应假设
 3. 同质性处理效应路径假设
 
-```stata
-//事件研究法
-reg lnr i.repeal*i.year i.fip acc ir pi alcohol crack poverty income ur if bf15==1 [aweight=totpop]
-```
+事件研究是将DID处理效应的箱子打开，将平均处理效应拆解为一系列“两组-两期”DID组合加权平均，有时事件研究法也被称为动态DID
+使用事件研究法，我们可以发现**在事前不存在处理效应**，**事后处理效应凸显**，且**效应的大小随时间增大**
+
+***代码存在于链接中*** 当然存在异质性时间处理效应也会存在问题，异质性会使加权权重出现问题。
 
 
 
