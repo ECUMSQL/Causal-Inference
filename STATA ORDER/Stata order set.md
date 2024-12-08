@@ -938,6 +938,7 @@ reg y treated##time,fe //这里的##表示同时加入两个自变量和他们�
 1. **处理效应随时间变化问题 导致一开始的平行趋势失效**
 2. 处理效应异质性问题 --导致了负权重的发生，即最后一期的权重过大导致正处理被其中的负号抵消。
 3. ***注意：*** 和处理的个体异质性有，就是加权使得负权重出现，对于坏的加大权，就是加权培根分解的第一项出现问题。
+<p style="text-align:center;"><span style="font-weight:bold;color:red;background-color: yellow">主要是坏的控制组，用已经处理的组当作控制组</span></p>
 
 ### <div style="font-size:20px;">4.DID的扩展</div>
 [DID大家庭参考](https://yuzhang.net/2023/10/25/Handbook%20of%20DID%20family_20231026/)
