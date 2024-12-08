@@ -958,6 +958,7 @@ xtreg y treated time did, fe
 2. <font color=red>多期DID</font>，异时DID-- ***由于个体变量受处理时间不同导致***
 
 [TWFE以及多期DID事件研究法操作](https://mp.weixin.qq.com/s/k2kxnRvzHFk3LLdwByZzyw)
+其操作经常会出现多重共线性问题，那么可以采用自己去掉基期，但是最好去现期和前期，不然若是去掉滞后期，若前期的系数的显著的，那么就无法分别前期系数的差异了。（相对于不显著显著，那么到底显不显著）。可以自己通过操作进行去除，事件研究法就可以这样。
 <div align="center">
     <img src="stagger did数据.png" width="70%">
 </div>
