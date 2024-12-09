@@ -447,7 +447,7 @@ reclink varlist using filename , idmaster(varname) idusing(varname) gen(newvarna
 
 我们在使用工具变量时，需要进行检验，最常见的就是排除性和相关性。  
 进行IV时我们需要讲故事，并且数据检验其合理性：同时其最基础的工具变量回归的代码如下
-
+***2sls只有当满足5个假设时才能是LATE，不然就是ATE，但是此时不准确，此时的2sls得出的系数由于工具变量的抵抗依从性，出现问题。***
 ```stata
 ivregress 2sls y (x1 = z1 z2) x2 x3, robust
 ```
@@ -1004,7 +1004,7 @@ eventstudyinteract oop_spend g_*,cohort(wave_hosp) control_cohort(never_treat) a
 
 可以采用 $panelview$ 命令进行可视化
 <font color=purple>但是多期did存在平行趋势以及时间的处理异质性等原因</font>导致多期DID估计的平均处理效应**不准确**，分别反映在培根分解上（处理的个体异质性导致加权权重出现问题，出现负权重冲解出来）
-多期 DID 估计的最后系数 ***是多个不同处理效应（不同组）的加权平均（异质性）*** 
+多期 DID 估计的最后系数 ***是多个不同处理效应（不同组）的加权平均（异质性）(按照占有比重加权，但是组异质类似于2sls那种)*** 
 <p style="text-align:center;"><span style="font-weight:bold;color:red;background-color: yellow">根据代码的实际操作，是用滞后期进行操作的，那么不管任何处理时间的组，都存在滞后期，那么就一定存在对照组以及加权问题</span></p>
 <div align="center">
     <img src="DID问题存在的元原因.png" width="70%">
