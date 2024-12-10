@@ -1106,7 +1106,7 @@ reghdfe yedu c.sdy_density#c.treat male han_ethn if rural==1, absorb(region1990 
 ***代码存在于链接中*** 当然存在异质性时间处理效应也会存在问题，异质性会使加权权重出现问题。
 
 
-<p style="text-align:center;"><span style="font-weight:bold;color:red;background-color: yellow">由于事件研究法以及基准的多期did都是滞后期以及先期，因此无法避免坏控制组的存在，所以有偏，必须满足条件。</span></p>
+<p style="text-align:center;"><span style="font-weight:bold;color:red;background-color: yellow">由于事件研究法以及基准的多期did都是滞后期以及先期，因此无法避免坏控制组的存在，所以有偏，必须满足条件。同时分割多个虚拟变量会造成多重共线性，需要找到基期。可以多试试。后期的处理效应显不显著没有关系，只要处理期显著，先期不显著就可以了。</span></p>
 
 
 
