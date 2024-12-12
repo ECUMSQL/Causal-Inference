@@ -129,5 +129,5 @@ data$列表名称 <- as.numeric(data$列表名称)#不同的转换就是不同�
 # 找数据网站
 
 [克雷格列表网](https://hongkong.craigslist.org/)
-[权威的大数据竞赛平台 —— 数据泉](https://www.datafountian.cn)
+[权威的大数据竞赛平台 —— 数据泉](https://www.datafountain.cn)
 [卡格乐数据集](https://www.kaggle.com/datasets)
