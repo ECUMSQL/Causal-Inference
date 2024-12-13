@@ -1229,6 +1229,8 @@ twoway (line gap48 year,lp(solid)lw(vthin)lcolor(black)), yline(0, lpattern(shor
     save ./synth_bmprate_48.dta, replace
 ```
 
+<p style="text-align:center;"><span style="font-weight:bold;color:red;background-color: yellow">偷坎宁汉的代码去，有画第二个图的代码（好看）</span></p>
+
 
 <div style="page-break-after: always;"></div>
 
