@@ -82,6 +82,8 @@ body {
   - [**2.断点估计**](#2断点估计)
 - [10.CIC](#10cic)
 - [11.SCM](#11scm)
+  - [1.简介以及注意事项](#1简介以及注意事项)
+  - [2.代码](#2代码)
 - [12.分位数回归](#12分位数回归)
 - [13.生存分析](#13生存分析)
 - [实用小代码stata](#实用小代码stata)
@@ -386,6 +388,8 @@ tobit y x1 x2 x3 //截尾回归 ll() 选项表示发生左截断的值，ul() �
 <div style="page-break-after: always;"></div>
 
 ## <div style="font-size:25px;text-align:center;">4.Matching</div>
+
+<p style="text-align:center;"><span style="font-weight:bold;color:red;background-color: yellow">匹配的思路比较简单：匹配与处理组近似的反事实组进行平均</span></p>
 
 ###  <div style="font-size:20px;">1. **精确匹配** </div>
 
@@ -1154,9 +1158,92 @@ rdrobust cod_any agemo_mda, covs(firstmonth) b(40) //采用40的带宽进行估�
 
 ## <div style="font-size:25px;text-align:center;">11.SCM</div>
 
+### <div style="font-size:20px;">1.简介以及注意事项</div>
+
+SCM是一种定量比较案例，使用***样本池中个体的加权平均值***来模拟反事实。
+
+<p style="text-align:center;"><span style="font-weight:bold;color:red;background-color: yellow">最终还是需要加权进行匹配（用匹配哪里的方法：具体的公式原理有些不同（需要注意））</span></p>
+
+优势：
+
+1. 排除了外推法
+2. 反事实的构建不需要在研究的设计阶段就获得处理后的结果。
+3. 所选择的权重明确了每个个体对反事实的贡献，而且是显性的
+4. 补充了定性研究的不足。缩小与定量研究的差距
+
+***如果干预前的拟合不好，或干预前期数太短，则不建议使用合成控制法***
+
+>note：合成控制法不仅仅是运行`synth`命令，必须通过安慰剂的推断找到p值，检查协变量的平衡性，最后检查有效性。
+多期的SCM，一般采用使用安慰剂检验的方法，来检验其处理效应的显著性。通常会存在两幅图片。
+
+<div align="center">
+    <img src="合成控制趋势图.png" width="70%">
+</div>
+
+<div align="center">
+    <img src="推理的检验统计量.png" width="70%">
+</div>
+
+<div align="center">
+    <img src="推理统计量直观图.png" width="70%">
+</div>
+
+***可以看出在进行每个个体的合成控制的安慰剂检验后，最后得到前后的MSPE趋势图，可以看出最后黑线代表的加州是趋势最大的，由于实际上碰巧看见加州最大的概率为1/39为0.026明显小于0.05，所以可以认为加州的处理效应是显著的。***
+
+<p style="text-align:center;"><span style="font-weight:bold;color:red;background-color: yellow">合成控制与匹配仍有一些区别，合成控制匹配时存在权重w，为了构建后面的合成控制组，而匹配则没有</span></p>
+
+### <div style="font-size:20px;">2.代码</div>
+
+```stata
+//合成控制法，坎宁汉的例子
+synth   bmprison //因变量
+        bmprison(1990) bmprison(1992) bmprison(1991) bmprison(1988)
+        //指定了变量 bmprison 在不同年份（1990、1992、1991、1988 年）的数据，用于抽查变量的平衡性
+        alcohol(1990) aidscapita(1990) aidscapita(1991) //这些是其他协变量（自变量），用于抽查变量的平衡性
+        income ur poverty black(1990) black(1991) black(1992) 
+        perc1519(1990)
+        ,
+        trunit(48) trperiod(1993) unitnames(state) //表示处理时期为1993年,trunit用于指定处理地区
+        //用于指定最小化均方预测误差（MSPE）的时期，默认为政策干预开始之前的所有时期
+        //用于指定此图的时间范围resultsperiod(1985(1)2000)
+        mspeperiod(1985(1)1993) resultsperiod(1985(1)2000)
+        //估计结果保存在新的stata文件
+        keep(./synth_bmprate.dta) replace fig;
+        //作图命令
+        mat list e(V_matrix);
+        #delimit cr
+        graph save Graph ../Figures/synth_tx.gph, replace
+use ./synth_bmprate.dta, clear
+keep _Y_treated _Y_synthetic _time
+drop if _time==.
+rename _time year
+rename _Y_treated  treat
+rename _Y_synthetic counterfact
+gen gap48=treat-counterfact
+sort year
+#delimit ; 
+twoway (line gap48 year,lp(solid)lw(vthin)lcolor(black)), yline(0, lpattern(shortdash) lcolor(black)) 
+    xline(1993, lpattern(shortdash) lcolor(black)) xtitle("",si(medsmall)) xlabel(#10) 
+    ytitle("Gap in black male prisoner prediction error", size(medsmall)) legend(off); 
+    #delimit cr
+    save ./synth_bmprate_48.dta, replace
+```
+
+
 <div style="page-break-after: always;"></div>
 
 ## <div style="font-size:25px;text-align:center;">12.分位数回归</div>
+
+
+
+
+
+
+
+
+
+
+
 
 <div style="page-break-after: always;"></div>
 
@@ -1198,6 +1285,8 @@ tabulate refy, generate (dummy_)
 9.//最大小值的小技巧
 summ varname, detail
 r(max)或者r(min)
+10.//改变命令分割
+#delimit;//使用；改变分割
 ```
 
 <div align="center">
@@ -1236,7 +1325,8 @@ r(max)或者r(min)
     **用途：** 自助法在数据集较小，难以有效划分训练集/验证集时很有用；此外，自助法能从初始数据集中产生多个不同的训练集，这对集成学习等方法有很大的好处。
 - 异质性与交乘项：
     交乘项做异质性的原因是组别不同所造成的处理异质性，这样的话用自变量与组别的虚拟变量相乘，交乘项的系数代表了处理效应的差，因此可以用来检验处理效应的异质性。直接reg就可以。
-
+- 自然实验：
+    指一种受试个体（群体）被自然地或被其他非观察者控制因素暴露在试验或控制条件下的一种试验研究方法。
 
 
 

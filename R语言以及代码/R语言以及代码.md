@@ -92,9 +92,53 @@ RDHonest(formula,data,subset,weights,cutoff = 0,M,kern = "triangular",na.action,
 result[["coefficients"]] #看估计的参数
 ```
 
+<div style="page-break-after: always;"></div>
 
+## <div style="font-size:25px;text-align:center;">10.SCM</div>
 
+```R
+library(tidyverse)
+library(haven)
+library(Synth)
+library(devtools)
+library(SCtools)
 
+read_data <- function(df)
+{
+  full_path <- paste("https://github.com/scunning1975/mixtape/raw/master/", 
+                     df, sep = "")#读取github的数据，返回数据的路径
+  df <- read_dta(full_path) #读取stata数据
+  return(df)
+}
+
+texas <- read_data("texas.dta") %>%
+  as.data.frame(.)#读取stata数据，转化为数据框
+
+dataprep_out <- dataprep(#数据准备
+  foo = texas,#需要处理的数据框
+  predictors = c("poverty", "income"),#构建预测变量
+  predictors.op = "mean",#定义了对预测变量进行的操作，这里指定为 "mean"，意味着会使用这些预测变量在相应时间区间内的均值来参与后续的计算等操作
+  time.predictors.prior = 1985:1993,#预测变量计算均值等操作所依据的时间范围，这里是从 1985 年到 1993 年这个时间段。
+  special.predictors = list(
+    list("bmprison", c(1988, 1990:1992), "mean"),#这里在弄匹配变量的匹配条件（均值是给定的权重）
+    list("alcohol", 1990, "mean"),
+    list("aidscapita", 1990:1991, "mean"),
+    list("black", 1990:1992, "mean"),
+    list("perc1519", 1990, "mean")),
+  dependent = "bmprison",#因变量的名称
+  unit.variable = "statefip",#单位变量的名称
+  unit.names.variable = "state",#展示单位名称的变量
+  time.variable = "year",
+  treatment.identifier = 48,#确定了处理组的标识
+  controls.identifier = c(1,2,4:6,8:13,15:42,44:47,49:51,53:56),#给出了对照组的标识集合
+  time.optimize.ssr = 1985:1993,#权重的考虑范围
+  time.plot = 1985:2000
+)
+
+synth_out <- synth(data.prep.obj = dataprep_out)
+
+path.plot(synth_out, dataprep_out)
+```
 
 
 ## <div style="font-size:25px;text-align:center;">实用小代码</div>
