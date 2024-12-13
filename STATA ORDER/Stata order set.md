@@ -1190,7 +1190,7 @@ SCM是一种定量比较案例，使用***样本池中个体的加权平均值**
 
 ***可以看出在进行每个个体的合成控制的安慰剂检验后，最后得到前后的MSPE趋势图，可以看出最后黑线代表的加州是趋势最大的，由于实际上碰巧看见加州最大的概率为1/39为0.026明显小于0.05，所以可以认为加州的处理效应是显著的。***
 
-<p style="text-align:center;"><span style="font-weight:bold;color:red;background-color: yellow">合成控制与匹配仍有一些区别，合成控制匹配时存在权重w，为了构建后面的合成控制组，而匹配则没有</span></p>
+<p style="text-align:center;"><span style="font-weight:bold;color:red;background-color: yellow">合成控制与匹配仍有一些区别，合成控制匹配时存在权重w，为了构建后面的合成控制组，而匹配则没有。同时合成控制法是由两个权重的，第二权重v是对于干预前期进行匹配得到的结果，因为大佬说，前期数据多时，前期匹配可以减少未观测因素的影响。所以是用前期匹配得出的权重进行后期的匹配</span></p>
 
 ### <div style="font-size:20px;">2.代码</div>
 
@@ -1198,14 +1198,15 @@ SCM是一种定量比较案例，使用***样本池中个体的加权平均值**
 //合成控制法，坎宁汉的例子
 synth   bmprison //因变量
         bmprison(1990) bmprison(1992) bmprison(1991) bmprison(1988)
-        //指定了变量 bmprison 在不同年份（1990、1992、1991、1988 年）的数据，用于抽查变量的平衡性
-        alcohol(1990) aidscapita(1990) aidscapita(1991) //这些是其他协变量（自变量），用于抽查变量的平衡性
+        //指定了变量 bmprison 在不同年份（1990、1992、1991、1988 年）的数据，预测值用于抽查变量的平衡性
+        alcohol(1990) aidscapita(1990) aidscapita(1991) //这些是其他协变量（自变量），预测值用于抽查变量的平衡性
         income ur poverty black(1990) black(1991) black(1992) 
         perc1519(1990)
         ,
-        trunit(48) trperiod(1993) unitnames(state) //表示处理时期为1993年,trunit用于指定处理地区
+        trunit(48) trperiod(1993) unitnames(state) //表示处理时期为1993年,trunit用于指定处理地区，unitnames用于地区名称代称
         //用于指定最小化均方预测误差（MSPE）的时期，默认为政策干预开始之前的所有时期
         //用于指定此图的时间范围resultsperiod(1985(1)2000)
+        //mspeperiod(1985(1)1993) 指定匹配时期
         mspeperiod(1985(1)1993) resultsperiod(1985(1)2000)
         //估计结果保存在新的stata文件
         keep(./synth_bmprate.dta) replace fig;
@@ -1213,20 +1214,6 @@ synth   bmprison //因变量
         mat list e(V_matrix);
         #delimit cr
         graph save Graph ../Figures/synth_tx.gph, replace
-use ./synth_bmprate.dta, clear
-keep _Y_treated _Y_synthetic _time
-drop if _time==.
-rename _time year
-rename _Y_treated  treat
-rename _Y_synthetic counterfact
-gen gap48=treat-counterfact
-sort year
-#delimit ; 
-twoway (line gap48 year,lp(solid)lw(vthin)lcolor(black)), yline(0, lpattern(shortdash) lcolor(black)) 
-    xline(1993, lpattern(shortdash) lcolor(black)) xtitle("",si(medsmall)) xlabel(#10) 
-    ytitle("Gap in black male prisoner prediction error", size(medsmall)) legend(off); 
-    #delimit cr
-    save ./synth_bmprate_48.dta, replace
 ```
 
 <p style="text-align:center;"><span style="font-weight:bold;color:red;background-color: yellow">偷坎宁汉的代码去，有画第二个图的代码（好看）</span></p>
