@@ -77,15 +77,17 @@ body {
   - [***3.DID形式***](#3did形式)
   - [4.DID的扩展](#4did的扩展)
   - [**4.事件研究法ES**](#4事件研究法es)
-- [9.RDD](#9rdd)
+- [8.RDD](#8rdd)
   - [**1.断点估计假设**](#1断点估计假设)
   - [**2.断点估计**](#2断点估计)
-- [10.CIC](#10cic)
-- [11.SCM](#11scm)
-  - [1.简介以及注意事项](#1简介以及注意事项)
+- [9.CIC](#9cic)
+  - [1.CIC的原理](#1cic的原理)
   - [2.代码](#2代码)
-- [12.分位数回归](#12分位数回归)
-- [13.生存分析](#13生存分析)
+- [10.SCM](#10scm)
+  - [1.简介以及注意事项](#1简介以及注意事项)
+  - [2.代码](#2代码-1)
+- [11.分位数回归](#11分位数回归)
+- [12.生存分析](#12生存分析)
 - [实用小代码stata](#实用小代码stata)
 - [一些方法](#一些方法)
 - [一些知识](#一些知识)
@@ -566,6 +568,7 @@ DID本来就是对于政策进行研究的，所以基本都会涉及时间，�
 2. 政策影响无溢出效应或交互效应（SUVTA）
 3. 无预期效应
 4. 处理效应同质
+5. 线性函数假设，就是和回归类似的相同假设
 
 ***平行趋势假设和安慰剂检验必做***
 >DID流程：
@@ -1116,7 +1119,7 @@ reghdfe yedu c.sdy_density#c.treat male han_ethn if rural==1, absorb(region1990 
 
 <div style="page-break-after: always;"></div>
 
-## <div style="font-size:25px;text-align:center;">9.RDD</div>
+## <div style="font-size:25px;text-align:center;">8.RDD</div>
 
 [陈强RDD框架](https://www.stata.com/meeting/china24-Uone-Tech/slides/China24_Chen.pdf)
 
@@ -1152,11 +1155,56 @@ rdrobust cod_any agemo_mda, covs(firstmonth) b(40) //采用40的带宽进行估�
 
 <div style="page-break-after: always;"></div>
 
-## <div style="font-size:25px;text-align:center;">10.CIC</div>
+## <div style="font-size:25px;text-align:center;">9.CIC</div>
+
+### <div style="font-size:20px;">1.CIC的原理</div>
+
+CIC的实际出现是为了解决DID所不能解决的 ***连续性以及非线性*** 的问题，但是同时也是需要 ***平行趋势假设***的，同时解决了 ***异质性的平均处理效应***的问题。
+
+<div align="center">
+    <img src="CIC公式.png" width="70%">
+</div>
+
+其中第一个数字表示组别，第二个数字表示期数。而具体的反事实是指用反函数构建出一个出一个控制组的从0到1期的映射，然后用这个映射来进行处理组的映射，最后得到处理效应。
+
+<div align="center">
+    <img src="CIC模型图.png" width="70%">
+</div>
+
+<p style="text-align:center;"><span style="font-weight:bold;color:red;background-color: yellow">实际的回归公式和DID的差不多只是构建的反事实比较巧妙</span></p>
+
+### <div style="font-size:20px;">2.代码</div>
+
+```stata
+// cic一般是两期
+cic estimator depvar tvar pvar [varlist] [if] [in] [weight] [,
+options]
+// depvar是被解释变量
+// tvar 是为组别变量 0-1
+// pvar 是时期变量 0-1 DID中的处理期
+// varlist 是协变量组
+// cic 后面可以有选项  continuous 代表估计量是连续性的结果
+//dci 代表的是离散的结果 满足条件独立假设即是随机实验
+// bounds 表示更低或者更高的受限离散估计
+// all 代表 以上所有都来一次
+cic continuous wage TREAT POST, vce(bootstrap, reps(50))
+bootstrap, reps(50): cic all wage TREAT POST, at(50 90) did vce(none)
+cic all wage TREAT POST, vce(delta) at(50)
+cic dci wage TREAT POST i.occupation, at(50) vce(bootstrap, reps(50))
+// at 表示一个cic结果百分位的列表，默认是(10(10)90)
+// vce 代表的是方差的估计方法
+// untreated 估计控制组的反事实影响
+// 跟着上面的例子就差不多
+```
+
+
+
+
+
 
 <div style="page-break-after: always;"></div>
 
-## <div style="font-size:25px;text-align:center;">11.SCM</div>
+## <div style="font-size:25px;text-align:center;">10.SCM</div>
 
 ### <div style="font-size:20px;">1.简介以及注意事项</div>
 
@@ -1221,7 +1269,7 @@ synth   bmprison //因变量
 
 <div style="page-break-after: always;"></div>
 
-## <div style="font-size:25px;text-align:center;">12.分位数回归</div>
+## <div style="font-size:25px;text-align:center;">11.分位数回归</div>
 
 
 
@@ -1236,7 +1284,7 @@ synth   bmprison //因变量
 
 <div style="page-break-after: always;"></div>
 
-## <div style="font-size:25px;text-align:center;">13.生存分析</div>
+## <div style="font-size:25px;text-align:center;">12.生存分析</div>
 
 
 
