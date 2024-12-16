@@ -137,7 +137,7 @@ body {
 在进行ols回归时，为了保证ols估计无偏，满足条件，需要保证其是线性的。***利用作图***
 
 ```stata
-reg y x1 x2 x3//robust 异方差情况
+reg y x1 x2 x3 //robust 异方差情况，可以通过i.x加固定效应
 ```
 
 ### <div style="font-size:20px;">2. **加权回归** </div>
@@ -629,7 +629,7 @@ xtreg y treated (year >= 政策实施时间点) did i.group_id#i.year, fe  // DI
 ```stata
 xtset id year // 设置以id为个体维度，year为时间维度的面板结构
 gen 多个did
-xtreg y 多个did 控制变量  聚类稳健的标准误//同时也可以加入分组-时间的固定效应
+xtreg y 多个did 控制变量  聚类稳健的标准误 //同时也可以加入分组-时间的固定效应
 ```
 
 3. ***使用安慰剂检验***(证伪检验，是否满足平行趋势)
@@ -954,12 +954,16 @@ reg y treated##time,fe //这里的##表示同时加入两个自变量和他们�
 
 1. 标准DID(两期)
 
+[连享会命令](https://mp.weixin.qq.com/s?__biz=Mzk0MDI1NTgyOQ==&mid=2247583584&idx=4&sn=1a0c896e4b48d44f8b954a3d8771849a&chksm=c2e7b85af590314c1fdbcb50512e5b28b1a6303b34452f3755839ab257768f4ad915523b11bf&scene=90&subscene=245&sessionid=1734335298&ascene=56&fasttmpl_type=0&fasttmpl_fullversion=7517157-en_US-zip&fasttmpl_flag=0&realreporttime=1734335310139&clicktime=1734335310&enterid=1734335310&devicetype=android-31&version=280036f1&nettype=ctnet&abtest_cookie=AAACAA%3D%3D&lang=en&exportkey=n_ChQIAhIQWr6z5udLne0hKqvgMunJORLfAQIE97dBBAEAAAAAAItBD7zLV2sAAAAOpnltbLcz9gKNyK89dVj02r7JnDEllobcaNLCSl4LEmDt%2B2M0DJz0tkIu8DFj9xe%2FZndUuKt%2BKV5wV6KdjALH%2FCOOW2iKDhtPi5f4y%2BwTSkvdaJdC3OuoyIKOJQ0veaRoMuU%2BrTQu097vE2UqpUrkHHzb96a7lDB29TukSINutc%2F991YArdW9HaFNTVCjHmzDrHSvfVI8CT5828yr2UQREmWQAMzLhhRwEt%2FsCAn4yHE6ECzCSbssQ29n%2FXrxw1n8%2BASnVCzwy9I%3D&pass_ticket=ygfLKR%2B1dTYYdpFvqe92hgYUGeWjD3WuTvsDeNjCLWni1ODVTe7Cz5L21AbpAC7A&wx_header=3)
 ```stata
 //生成交互项
 gen did = treated * time
 xtset id year//设定时间和个体
 //进行双向固定效应的DID估计（个体和时间固定效应）
 xtreg y treated time did, fe
+// 也可用reghdfe命令 加多个固定效应
+//采用estfe进行固定效应yes/no的估计
+reghdfe y treated time did, absorb(id year) 
 ```
 
 2. <font color=red>多期DID</font>，异时DID-- ***由于个体变量受处理时间不同导致***
@@ -1077,6 +1081,7 @@ eventstudyinteract oop_spend g_*,cohort(wave_hosp) control_cohort(never_treat) a
        ***基于插补的估计值有很多***
 
 ---
+
 3. 广义DID--若冲击在全部数据中存在，无控制组，前提是个体受冲击的影响不同，或随着时间改变，其政策影响变化
 ***其实用RDD比DID好***
 
