@@ -1338,13 +1338,26 @@ import delimited "path/to/your/file.csv", clear
 reg y x1 x2 x3 i.id, cluster(id) //其中相当于加入了id即个体的固定效应。
 7. //哑变量的快捷生成,生成varname1等变化的哑变量
 tab varname, miss gen(varname)
-8.//快速生成虚拟变量
+8. //快速生成虚拟变量
 tabulate refy, generate (dummy_)
-9.//最大小值的小技巧
+9. //最大小值的小技巧
 summ varname, detail
 r(max)或者r(min)
-10.//改变命令分割
+10. //改变命令分割
 #delimit;//使用；改变分割
+11. //set more off命令的作用是关闭这种分页显示功能，让 Stata 的输出结果不间断地全部显示出来。
+set more off
+12. //宣称数据集 便于更换
+global data +文件地址
+// 储存输出结果
+global final +文件地址
+// 后续使用宏进行选取
+use "$data\MSA_dataset.dta", clear
+13. //logout部分输出结果到外部文件
+logout, save(文件名称) text replace // 如果已经存在名为 table1_1直接替换
+14. //tabstat 命令用于计算变量的统计量，s(mean p50 sd min max N)包括均值、标准差、最小值、最大值等。f(%12.4f)表示输出格式为12位数，其中4位小数。
+logout, save(table1_1) tex replace: tabstat 变量 , s(mean p50 sd min max N) f(%12.4f) c(s)
+
 ```
 
 <div align="center">
