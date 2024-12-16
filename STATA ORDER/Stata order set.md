@@ -1219,10 +1219,20 @@ SCM是一种定量比较案例，使用***样本池中个体的加权平均值**
 3. 所选择的权重明确了每个个体对反事实的贡献，而且是显性的
 4. 补充了定性研究的不足。缩小与定量研究的差距
 
+<div align="center">
+    <img src="SCM公式.png" width="70%">
+</div>
+
+<div align="center">
+    <img src="SCM公式1.png" width="70%">
+</div>
+
+<p style="text-align:center;"><span style="font-weight:bold;color:red;background-color: yellow">先取权重W，再最优化V</span></p>
+
 ***如果干预前的拟合不好，或干预前期数太短，则不建议使用合成控制法***
 
 >note：合成控制法不仅仅是运行`synth`命令，必须通过安慰剂的推断找到p值，检查协变量的平衡性，最后检查有效性。
-多期的SCM，一般采用使用安慰剂检验的方法，来检验其处理效应的显著性。通常会存在两幅图片。
+多期-一个处理组的SCM，一般采用使用安慰剂检验的方法，来检验其处理效应的显著性。通常会存在两幅图片。
 
 <div align="center">
     <img src="合成控制趋势图.png" width="70%">
