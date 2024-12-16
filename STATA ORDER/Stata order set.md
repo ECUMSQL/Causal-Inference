@@ -1208,6 +1208,12 @@ cic dci wage TREAT POST i.occupation, at(50) vce(bootstrap, reps(50))
 
 ### <div style="font-size:20px;">1.简介以及注意事项</div>
 
+***前提：***
+
+1. MSPE最优化产生的值仍然较高，不满足要求
+2. 实际上还是线性匹配，导致对于非线性的函数的匹配效果太差
+3. 溢出效应导致无法很好匹配（一种内生性影响）
+
 SCM是一种定量比较案例，使用***样本池中个体的加权平均值***来模拟反事实。
 
 <p style="text-align:center;"><span style="font-weight:bold;color:red;background-color: yellow">最终还是需要加权进行匹配（用匹配哪里的方法：具体的公式原理有些不同（需要注意））</span></p>
@@ -1227,7 +1233,7 @@ SCM是一种定量比较案例，使用***样本池中个体的加权平均值**
     <img src="SCM公式1.png" width="70%">
 </div>
 
-<p style="text-align:center;"><span style="font-weight:bold;color:red;background-color: yellow">先取权重W，再最优化V</span></p>
+<p style="text-align:center;"><span style="font-weight:bold;color:red;background-color: yellow">先取权重W，再最优化V，其最优化的匹配是通过处理前期的匹配完成的</span></p>
 
 ***如果干预前的拟合不好，或干预前期数太短，则不建议使用合成控制法***
 
