@@ -1357,6 +1357,7 @@ use "$data\MSA_dataset.dta", clear
 logout, save(文件名称) text replace // 如果已经存在名为 table1_1直接替换
 14. //tabstat 命令用于计算变量的统计量，s(mean p50 sd min max N)包括均值、标准差、最小值、最大值等。f(%12.4f)表示输出格式为12位数，其中4位小数。
 logout, save(table1_1) tex replace: tabstat 变量 , s(mean p50 sd min max N) f(%12.4f) c(s)
+15. //使用 preserve 可以先把数据当前的完整状态 “快照” 保存下来，以便后续能够恢复到这个初始状态
 
 ```
 
