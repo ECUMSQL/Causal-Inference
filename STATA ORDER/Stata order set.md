@@ -1112,6 +1112,7 @@ reghdfe yedu c.sdy_density#c.treat male han_ethn if rural==1, absorb(region1990 
 ###  <div style="font-size:20px;">**4.事件研究法ES**</div>
 
 [为了平行趋势](https://yuzhang.net/2023/11/11/Handbook%20of%20Event%20Study/#正确控制组群异质性时间趋势)
+[ESA太细节](https://zhuanlan.zhihu.com/p/649264012)
 事件研究法为冲击的时间动态提供了丰富的细节（以图形直观展示），同时也可以用于检验平行趋势假设。
 使用TWFE时，事件研究的对象应该 ***满足的假设*** （即下图a、b的情况）：
 1. 平行趋势假设
