@@ -1247,7 +1247,12 @@ SCM是一种定量比较案例，使用***样本池中个体的加权平均值**
 <div align="center">
     <img src="SCM求解步骤.png" width="70%">
 </div>
-
+<div align="center">
+    <img src="SCM步骤1.png" width="70%">
+</div>
+<div align="center">
+    <img src="SCM步骤2.png" width="70%">
+</div>
 <p style="text-align:center;"><span style="font-weight:bold;color:red;background-color: yellow">先取权重W，再最优化V，其最优化的匹配是通过处理前期的匹配完成的</span></p>
 
 ***如果干预前的拟合不好，或干预前期数太短，则不建议使用合成控制法***
