@@ -1269,6 +1269,10 @@ SCM是一种定量比较案例，使用***样本池中个体的加权平均值**
 </div>
 
 <div align="center">
+    <img src="p值的计算.png" width="70%">
+</div>
+
+<div align="center">
     <img src="推理统计量直观图.png" width="70%">
 </div>
 
