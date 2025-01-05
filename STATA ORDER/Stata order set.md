@@ -86,7 +86,9 @@ body {
 - [10.SCM](#10scm)
   - [1.简介以及注意事项](#1简介以及注意事项)
   - [2.代码](#2代码-1)
-- [11.分位数回归](#11分位数回归)
+- [11.时间序列模型](#11时间序列模型)
+  - [1 有限分布滞后模型](#1-有限分布滞后模型)
+  - [2.数据的趋势与季节性问题](#2数据的趋势与季节性问题)
 - [12.生存分析](#12生存分析)
 - [实用小代码stata](#实用小代码stata)
 - [一些方法](#一些方法)
@@ -1309,11 +1311,15 @@ synth   bmprison //因变量
 
 <div style="page-break-after: always;"></div>
 
-## <div style="font-size:25px;text-align:center;">11.分位数回归</div>
+## <div style="font-size:25px;text-align:center;">11.时间序列模型</div>
 
+### <div style="font-size:20px;">1 有限分布滞后模型</div>
 
+就是加入自变量的滞后项的模型。
 
+### <div style="font-size:20px;">2.数据的趋势与季节性问题</div>
 
+数据具有趋势问题，为了解决这个问题，最好是进行除趋势。
 
 
 
