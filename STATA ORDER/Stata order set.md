@@ -45,6 +45,7 @@ body {
 </div>
 
 - [1.Random Experiment](#1random-experiment)
+  - [1.1 Field Experiment](#11-field-experiment)
 - [2.OLS](#2ols)
   - [1. **OLS回归** ](#1-ols回归-)
   - [2. **加权回归** ](#2-加权回归-)
@@ -126,6 +127,13 @@ body {
     reg y x controls //将面板数据当成截面数据做回归
     estat vif //方差膨胀因子 ，VIF最大不超过10，严格来说不应高于5
    ```
+
+### <div style="font-size:25px;text-align:center;">1.1 Field Experiment</div>
+
+田野试验结合 **实验室高度受控的环境以及自然试验的可拓展性的优点**，是一种在现实世界进行但是收到高度控制的实验，例如：对于控制组进行安慰剂处理，而对实验组进行实际处理来消除其他细小的差别。
+
+***用处：***
+其可以很好的控制一些心理变量，也具有较强的外部效度，同时也可以尽可能多控制其他的变量。
 
 <div style="page-break-after: always;"></div>
 
