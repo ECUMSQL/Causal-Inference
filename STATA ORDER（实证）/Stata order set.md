@@ -70,6 +70,7 @@ body {
   - [**1.弱工具变量检验**](#1弱工具变量检验)
   - [**2.外生性（排除性）检验**](#2外生性排除性检验)
   - [**3.过度识别检验**](#3过度识别检验)
+  - [**4.Bartik Instrument（移动份额工具变量）**](#4bartik-instrument移动份额工具变量)
 - [6.Panel Data](#6panel-data)
   - [**1.固定效应**](#1固定效应)
 - [7.DID](#7did)
@@ -134,6 +135,8 @@ body {
 
 ***用处：***
 其可以很好的控制一些心理变量，也具有较强的外部效度，同时也可以尽可能多控制其他的变量。
+
+<!-- ------------------------------------------------------- -->
 
 <div style="page-break-after: always;"></div>
 
@@ -295,6 +298,7 @@ Lassoknots //绘制交叉验证图，给出不同lamda下的交叉验证结果
 coefpath,legend(on position(12) cols(4)) //coefpath函数来绘制lasso的系数路径（coefficient paths）
 ```
 
+<!-- ------------------------------------------------------- -->
 <div style="page-break-after: always;"></div>
 
 ## <div style="font-size:25px;text-align:center;">3.Limit dependent varible</div>
@@ -403,6 +407,8 @@ tobit y x1 x2 x3 //截尾回归 ll() 选项表示发生左截断的值，ul() �
 
 - Hit rate
 
+
+<!-- ------------------------------------------------------- -->
 <div style="page-break-after: always;"></div>
 
 ## <div style="font-size:25px;text-align:center;">4.Matching</div>
@@ -463,6 +469,8 @@ reclink varlist using filename , idmaster(varname) idusing(varname) gen(newvarna
     psmatch2 treat x1 x2, outcome(y) kernel kerneltype(normal/biweight/epan/uniform/tricube) //进行核匹配
     ```
 
+
+<!-- ------------------------------------------------------- -->
 <div style="page-break-after: always;"></div>
 
 ## <div style="font-size:25px;text-align:center;">5.Instrument Variable</div>
@@ -545,6 +553,56 @@ ivregress 2sls y (x1 = z1 z2) x2 x3, robust
 3. **Hansen J统计量** 非iid时用Hansen J统计量
    和Sargon检验类似 非iid时用Hassen统计量 原假设为所有变量外生
 
+### <div style="font-size:20px;">**4.Bartik Instrument（移动份额工具变量）**</div>
+
+[Bartik Instrument解释](https://zhuanlan.zhihu.com/p/660930665)
+
+工具变量可以很好的解决内生性问题，但最大的难点在于寻找合适的工具变量，因此发展出来两种寻找工具变量的思路。
+
+一是，寻找一个巧妙的变量IV，使得IV与自变量相关（相关性假设）但是与扰动项不相关（外生性假设），并且通过了“弱工具变量检验”和“排他性检验”之后才能作为一个合格的IV，常见的IV有：气候、空间距离、犯罪率……但寻找这些变量通常比较困难，需要一定的创造性和想象力
+
+二是，既然工具变量要求满足“相关性”和"外生性“的要求，**那就在已有变量的基础上构建一个新的外生的变量使其满足这2个要求**
+
+1. **假设：（1）假设地区之间相互独立，忽略空间溢出或相关性；（2）假设样本数据具有稳定状态。（3）当各地区不同行业在初始年份的就业份额是外生时，才能保证TSLS估计量的一致性，此时可以使用Bartik IV**
+在Bartik IV之前，常见在已有变量基础上构建新的外生IV的方法为"行业内其他公司（核心自变量）的均值（其他iv的构建）
+
+<div align="center">
+    <img src="Bartik代码.png" width="70%">
+</div>
+
+2. ***何时使用Bartik IV？***：
+Bartik工具的原理是基于初始年份地区内行业的就业份额与国家层面行业的就业增长率的加权平均来构造Bartik IV。当劳动供给弹性估计方程的残差项  与地区层面行业的就业增长率相关时，可以使用Bartik IV解决面临的内生性问题
+
+**在有限样本中，使用Bartik工具的两阶段估计量与使用行业份额作为工具的GMM估计量是等价的**
+
+<div align="center">
+    <img src="Bartik思路.png" width="70%">
+</div>
+
+3. **为什么使用Bartik IV？**
+
+*本质*：利用个体初始的份额构成和总体的增长率来模拟出历年的估计值，得到的*估计值与实际值之间高度相关*，但与其他的残差项*并不相关*
+
+通过论证发现，基于Bartik IV的两阶段最小二乘估计量在数值上等于以地方行业初始年份的份额为IV、以全国行业增长率为权重矩阵得到的GMM估计量，且份额衡量了对共同冲击的暴露程度，**Bartik IV估计以份额的外生性为前提。**
+
+4. **如何使用Bartik IV？**
+
+    检验外生性：
+    1. 计算相关性
+    2. 在受到冲击之前，检验具有不同行业份额地区的变化是否满足平行趋势，可以根据具有最大Rotemberg权重的工具来观察平行趋势，以及基于总体Bartik工具来观察平行趋势
+    3. 利用过度识别检验来判断行业份额的外生性。该方法的前提假设是工具变量对所有个体的影响相同，即同质影响
+
+5. Stata操作：ssaggregate 命令
+   ```stata
+    ssc install ivreg2, replace
+    ssc install ivreghdfe, replace
+    ssc install estout, replace
+    ssc install ssaggregate, replace
+    saggregate `location_vars' z [aw=wei], controls("`basecontrols'") l(czone) ///
+    t(year) sfilename(Lshares)  n(sic87dd) s(ind_share)
+   ```
+
+<!-- ------------------------------------------------------- -->
 <div style="page-break-after: always;"></div>
 
 ## <div style="font-size:25px;text-align:center;">6.Panel Data</div>
@@ -571,7 +629,7 @@ ivregress 2sls y (x1 = z1 z2) x2 x3, robust
 
 
 
-
+<!-- ------------------------------------------------------- -->
 <div style="page-break-after: always;"></div>
 
 ## <div style="font-size:25px;text-align:center;">7.DID</div>
@@ -1137,7 +1195,7 @@ reghdfe yedu c.sdy_density#c.treat male han_ethn if rural==1, absorb(region1990 
 
 <p style="text-align:center;"><span style="font-weight:bold;color:red;background-color: yellow">由于事件研究法以及基准的多期did都是滞后期以及先期，因此无法避免坏控制组的存在，所以有偏，必须满足条件。同时分割多个虚拟变量会造成多重共线性，需要找到基期。可以多试试。后期的处理效应显不显著没有关系，只要处理期显著，先期不显著就可以了。</span></p>
 
-
+<!-- ------------------------------------------------------- -->
 
 <div style="page-break-after: always;"></div>
 
@@ -1174,6 +1232,10 @@ rdrobust cod_any agemo_mda, covs(firstmonth) kernel(uniform) //表示用核函�
 rdrobust cod_any agemo_mda, covs(firstmonth) p(2) //采用局部多项式拟合，这里用的是2项式，为了避免非线性，这里还没有用到窗口
 rdrobust cod_any agemo_mda, covs(firstmonth) b(40) //采用40的带宽进行估计
 ```
+
+<!-- ------------------------------------------------------- -->
+
+
 
 <div style="page-break-after: always;"></div>
 
@@ -1222,7 +1284,7 @@ cic dci wage TREAT POST i.occupation, at(50) vce(bootstrap, reps(50))
 
 
 
-
+<!-- ------------------------------------------------------- -->
 
 <div style="page-break-after: always;"></div>
 
@@ -1317,6 +1379,8 @@ synth   bmprison //因变量
 <p style="text-align:center;"><span style="font-weight:bold;color:red;background-color: yellow">偷坎宁汉的代码去，有画第二个图的代码（好看）</span></p>
 
 
+<!-- ------------------------------------------------------- -->
+
 <div style="page-break-after: always;"></div>
 
 ## <div style="font-size:25px;text-align:center;">11.时间序列模型</div>
@@ -1334,7 +1398,7 @@ synth   bmprison //因变量
 
 
 
-
+<!-- ------------------------------------------------------- -->
 
 <div style="page-break-after: always;"></div>
 
@@ -1412,7 +1476,7 @@ logout, save(table1_1) tex replace: tabstat 变量 , s(mean p50 sd min max N) f(
 
 
 
-
+<!-- ------------------------------------------------------- -->
 
 
 
