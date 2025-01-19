@@ -1332,6 +1332,24 @@ SCM是一种定量比较案例，使用***样本池中个体的加权平均值**
 >note：合成控制法不仅仅是运行`synth`命令，必须通过安慰剂的推断找到p值，检查协变量的平衡性，最后检查有效性。
 多期-一个处理组的SCM，一般采用使用安慰剂检验的方法，来检验其处理效应的显著性。通常会存在两幅图片。
 
+```stata
+synth depvar predictorvars(x1 x2 x3) , trunit(#) trperiod(#)   ///
+   [ counit(numlist) xperiod(numlist) mspeperiod()  ///
+   resultsperiod() nested allopt unitnames(varname) ///
+   figure keep(file) customV(numlist) optsettings ]
+   " y "为结果变量（outcome variable）" x1 x2 x3 "为预测变量（predictors）。
+   必选项" trunit(#) "用于指定处理地区（trunit 表示 treated unit）。
+   必选项" trperiod(#) "用于指定政策干预开始的时期（trperiod 表示 treated period）。
+   选择项" counit(numlist) "用于指定潜在的控制地区（即 donor pool，其中 counit 表示 control units），默认为数据集中的除处理地区以外的所有地区。
+   选择项" xperiod(numlist) "用于指定将预测变量（predictors）进行平均的期间，默认为政策干预开始之前的所有时期（the entire pre-intervention period）。
+   选择项" mspeperiod() "用于指定最小化均方预测误差（MSPE）的时期，默认为政策干预开始之前的所有时期。
+   选择项" figure "表示将处理地区与合成控制的结果变量画时间趋势图，
+   选择项"resultsperiod()"用于指定此图的时间范围（默认为整个样本期间）。
+   选择项" nested "表示使用嵌套的数值方法寻找最优的合成控制（推荐使用此选项），这比默认方法更费时间，但可能更精确。在使用选择项"nested"时，如果再加上选择项" allopt "（即" nested allopt "），则比单独使用"nested"还要费时间，但精确度可能更高。
+   选择项" keep(filename) "将估计结果（比如，合成控制的权重、结果变量）存为另一 Stata 数据集（filename.dta），以便进行后续计算。
+```
+
+
 <div align="center">
     <img src="合成控制趋势图.png" width="70%">
 </div>
