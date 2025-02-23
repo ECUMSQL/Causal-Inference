@@ -498,16 +498,19 @@ ivregress 2sls y (x1 = z1 z2) x2 x3, robust
 
 2. **Cragg-Donald检验**  
    一般条件是同方差，无自相关
-
+    原假设是好的
     ```stata
     ivreg2 y (x1 x2 = z1 z2), robust  //Cragg-Donald检验,要大于 10
     ```
-
-3. **Kleibergen-Paap检验** 无iid假设
+    假设扰动项为iid，则看CDW检验统计量。如果不对扰动项作iid的假设，则看KP W rk F统计量。所以加r选项时才有KP W rk F统计量，不加则没有。不管加不加r选项，CDW统计量总有。通常建议加上r选项
+3. **Kleibergen-Paap Wald rk 检验** 无iid假设
 
     ```stata
-    ivreg2 y (x1 x2 = z1 z2), robust   //Kleibergen-Paap检验,要大于 10
+    ivreg2 y (x1 x2 = z1 z2), robust   //Kleibergen-Paap检验,要大于 10。要求p值不能大于0.1
     ```
+    在iid情况下看Anderson LM 统计量，在非iid情况下看Kleibergen-Paap rk LM统计量
+
+4. **最小特征统计量** 大于10即可
 
 ### <div style="font-size:20px;">**2.外生性（排除性）检验**</div>
 
@@ -551,7 +554,7 @@ ivregress 2sls y (x1 = z1 z2) x2 x3, robust
     ```
 
 3. **Hansen J统计量** 非iid时用Hansen J统计量
-   和Sargon检验类似 非iid时用Hassen统计量 原假设为所有变量外生
+   和Sargon检验类似 非iid时用Hassen统计量 原假设为所有变量外生，iid时用Sargan统计量
 
 ### <div style="font-size:20px;">**4.Bartik Instrument（移动份额工具变量）**</div>
 
