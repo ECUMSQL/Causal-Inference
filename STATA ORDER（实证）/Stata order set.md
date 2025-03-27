@@ -1476,7 +1476,50 @@ logout, save(文件名称) text replace // 如果已经存在名为 table1_1直�
 14. //tabstat 命令用于计算变量的统计量，s(mean p50 sd min max N)包括均值、标准差、最小值、最大值等。f(%12.4f)表示输出格式为12位数，其中4位小数。
 logout, save(table1_1) tex replace: tabstat 变量 , s(mean p50 sd min max N) f(%12.4f) c(s)
 15. //使用 preserve 可以先把数据当前的完整状态 “快照” 保存下来，以便后续能够恢复到这个初始状态
-
+16. //使用by id 进行分组 ，ipolate 命令用于插值，通过给定的数据点，估计两个数据点之间的值。r表示需要插值的变量，gen表示生成新变量r1。
+by id: ipolate r year, gen(r1)
+// 对新生成的变量进行插值，生成新变量r2，epolate 表示外插值，一般两次可以插值完成
+by id: ipolate r1 year, gen(r2) epolate
+17.//表示采用不同的固定效应模型，其中有两个固定效应，一个是个体固定效应，一个是时间固定效应
+reg ipc in_1 rdd campus Abs Fin i.id i.year,vce(cluster id) //vif1.36
+18.//储存数据
+esttab m1 m2 m3 m4 m5 m6 using "文件储存路径", b(%6.4f) t(%6.4f) nogap compress  ///
+            star(* 0.1 ** 0.05 *** 0.01)  ///
+            drop(*.id *.year) ///
+            ar2 scalar(N) replace
+m1 到 m6 是6个已存储的回归模型结果
+using 指定输出文件的路径和名称
+输出格式为RTF文件（富文本格式，可用Word打开）
+b(%6.4f): 系数显示为小数点后4位
+t(%6.4f): t统计量显示为小数点后4位
+nogap: 删除表格中的空行，使表格更紧凑
+compress: 压缩表格宽度
+    设置显著性水平的标记：
+*: p < 0.1 (10%显著性水平)
+**: p < 0.05 (5%显著性水平)
+***: p < 0.01 (1%显著性水平)
+drop(*.id *.year)删除所有包含id和year的变量（通常是固定效应）*是通配符，匹配任何字符
+ar2: 显示调整后的R方
+scalar(N): 显示观测值数量      replace: 如果输出文件已存在，则覆盖它
+19.//聚类标准固定，工具变量 endog(in_1): 指定内生变量，savefirst: 保存第一阶段结果，first: 显示第一阶段回归结果，absorb(id year): 控制个体和时间固定效应
+ivreghdfe ipc (in_1 = gaotie) rdd campus Abs Fin, absorb(id year) cluster(id) first endog(in_1) savefirst
+outreg2 using "C:\Users\yimen\Desktop\顶尖发明人才\iv_1.rtf", dec(4) replace tstat 
+//dec(4): 小数点后保留4位 replace: 覆盖已存在的文件  tstat: 显示t统计量
+estimates dir
+estimates restore _ivreg2_in_1 
+// estimates dir: 显示所有存储的估计结果       estimates restore _ivreg2_in_1: 调出第一阶段回归结果
+outreg2 using "C:\Users\yimen\Desktop\顶尖发明人才\iv_1.rtf", dec(4) append tstat      ///append: 追加模式，不覆盖原文件
+20.//c.year#i.id: 个体特定时间趋势（每个个体都有自己的时间趋势）加入地区与时间交互固定效应
+reg ipc in_1 rdd campus Abs Fin i.id i.year c.year#i.id ,vce(cluster id) 
+est store m4
+21.//L.ipc: 因变量一阶滞后    L2.ipc: 因变量二阶滞后        L3.ipc: 因变量三阶滞后 iv(gaotie iv_in): 外生工具变量 nolevel: 不包含水平方程 twostep: 使用两步法估计  将解释变量的一阶到三阶滞后作为GMM工具变量
+xtabond2 ipc L.ipc L2.ipc L3.ipc in_1 rdd campus Abs Fin i.year, gmm (L.in_1 L2.in_1 L3.in_1) iv(gaotie iv_in) nolevel twostep cluster(id)
+//差分GMM        ----对基本模型进行一阶差分以去除固定效应的影响，然后用一组滞后的解释变量作为差分方程中相应变量的工具变量   nolevel是差分方程一定需要的
+//系统GMM估计量     -----结合了差分方程和水平方程，还增加了一组滞后的差分变量作为水平方程的相应的工具。 
+xtabond2 n L.n L2.n w L.w k L.k i.year, gmm(L.n L.w L.k) iv(i.year, equation(level)) robust small nomata  或者
+xtabond2 n L.n L2.n w L.w k L.k i.year, gmm(L.n L.w L.k) iv(i.year) robust small nomata
+// 系统GMM条件：1.过度识别，Hansen检验，H0:IV是联合有效的，因此，不应该显著，也就是p值不应该小于0.1。
+//2.扰动项差分自相关。一般允许扰动项的一阶差分存在自相关，也就是AR（1）的p值小于0.1，但不允许扰动项的二阶差分存在自相关，也就是AR（2）的p值应该大于0.1
 ```
 
 <div align="center">
