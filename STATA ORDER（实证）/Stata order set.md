@@ -1520,6 +1520,8 @@ xtabond2 n L.n L2.n w L.w k L.k i.year, gmm(L.n L.w L.k) iv(i.year, equation(lev
 xtabond2 n L.n L2.n w L.w k L.k i.year, gmm(L.n L.w L.k) iv(i.year) robust small nomata
 // 系统GMM条件：1.过度识别，Hansen检验，H0:IV是联合有效的，因此，不应该显著，也就是p值不应该小于0.1。
 //2.扰动项差分自相关。一般允许扰动项的一阶差分存在自相关，也就是AR（1）的p值小于0.1，但不允许扰动项的二阶差分存在自相关，也就是AR（2）的p值应该大于0.1
+//在过度识别情况下(待估参数个数小于矩条件个数)，MM 不再适用，GMM 可以有效地组合矩条件，使 GMM 比 MM 更有效。GMM的使用条件就是1.工具变量与误差项不相关，一阶差分方程中随机误差项不存在二阶序列相关。
+
 ```
 
 <div align="center">
