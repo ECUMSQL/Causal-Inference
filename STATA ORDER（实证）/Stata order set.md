@@ -1623,3 +1623,4 @@ xtabond2 n L.n L2.n w L.w k L.k i.year, gmm(L.n L.w L.k) iv(i.year) robust small
     <p style="font-size:18px;">题3.置信区间图</p>
 </div>
 
+4. 稳健性检验的各个方法以及其针对问题  (稳健性检验)[https://mp.weixin.qq.com/s?__biz=MjM5OTMwODM1Mw==&mid=2448112877&idx=1&sn=87f26d9f875115474cf97b0344e865ff&chksm=b2ec36a54e3c5a12356b89a40076a210b689effd6c7e1f02bd52e95ffa21602259f120868e5c#rd]
