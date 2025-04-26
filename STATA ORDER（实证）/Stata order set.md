@@ -53,6 +53,7 @@ body {
   - [4. **迭代加权最小二乘方法（不要求）** ](#4-迭代加权最小二乘方法不要求-)
   - [5. **岭回归** ](#5-岭回归-)
   - [5. **Lasso回归** ](#5-lasso回归-)
+  - [6. **非线性的回归** ](#6-非线性的回归-)
 - [3.Limit dependent varible](#3limit-dependent-varible)
   - [1. **Logit模型** ](#1-logit模型-)
   - [2. **Probit模型**  ](#2-probit模型--)
@@ -303,6 +304,14 @@ Lassoknots //选择选值过程
 Lassoknots //绘制交叉验证图，给出不同lamda下的交叉验证结果
 coefpath,legend(on position(12) cols(4)) //coefpath函数来绘制lasso的系数路径（coefficient paths）
 ```
+
+### <div style="font-size:20px;">6. **非线性的回归** </div>
+
+1. *回归* ：看二次项系数联想到多次函数
+2. *工具变量*：采用工具变量的平方作为非线性项
+3.*调节效应*：分为三种：转折点漂移的检验，曲线形状改变的检验，形状翻转曲线
+[多次函数的交互项](https://www.zhihu.com/question/415907814)
+
 
 <!-- ------------------------------------------------------- -->
 <div style="page-break-after: always;"></div>
